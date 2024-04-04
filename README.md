@@ -115,7 +115,7 @@ If you notice any bugs please open an issue or send a PR to fix it.
 
 Feel free to add new parsers to support transaction history from more brokers.
 
-## Testing
+## Running from source
 
 This project uses [Poetry](https://python-poetry.org/) for managing dependencies.
 
@@ -127,4 +127,12 @@ You can also run all linters and tests manually with this command:
 
 ```shell
 poetry run pre-commit run --all-files
+```
+
+Run the CGT calculator with:
+
+```shell
+poetry run cgt-calc --year 2023 \
+    --schwab schwab_transactions.csv \
+    --schwab_equity_award_json schwab_equity_award.json
 ```

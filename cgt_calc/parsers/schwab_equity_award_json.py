@@ -157,6 +157,9 @@ def _decimal_from_str(price_str: str) -> Decimal:
     Remove $ sign, and comma thousand separators so as to handle dollar amounts
     such as "$1,250.00".
     """
+    if not price_str:
+        return Decimal()
+
     return Decimal(price_str.replace("$", "").replace(",", ""))
 
 
