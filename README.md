@@ -1,4 +1,4 @@
-[![CI](https://github.com/KapJI/capital-gains-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/KapJI/capital-gains-calculator/actions)
+[![CI](https://github.com/xmanatee/capital-gains-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/xmanatee/capital-gains-calculator/actions)
 [![PyPI version](https://img.shields.io/pypi/v/cgt-calc)](https://pypi.org/project/cgt-calc/)
 
 # UK capital gains calculator
@@ -9,7 +9,7 @@ Automatically convert all prices to GBP and apply HMRC rules to calculate capita
 
 ## Report example
 
-[calculations_example.pdf](https://github.com/KapJI/capital-gains-calculator/blob/main/calculations_example.pdf)
+[calculations_example.pdf](https://github.com/xmanatee/capital-gains-calculator/blob/main/calculations_example.pdf)
 
 ## Installation
 
@@ -21,9 +21,9 @@ pipx install cgt-calc
 
 ## Prerequisites
 
--   Python 3.9 or above.
--   `pdflatex` is required to generate the report.
--   [Optional] Docker
+- Python 3.9 or above.
+- `pdflatex` is required to generate the report.
+- [Optional] Docker
 
 ## Install LaTeX
 
@@ -68,17 +68,17 @@ and when you're done, simply exit the shell. You will be dropped back into the s
 
 You will need several input files:
 
--   Exported transaction history from Schwab in CSV format since the beginning.
-    Or at least since you first acquired the shares, which you were holding during the tax year. Schwab only allows to download transaction for the last 4 years so keep it safe. After that you may need to restore transactions from PDF statements.
-    [See example](https://github.com/KapJI/capital-gains-calculator/blob/main/tests/test_data/schwab_transactions.csv).
--   Exported transaction history from Schwab Equity Awards (e.g. for Alphabet/Google employees) since the beginning (Note: Schwab now allows for the whole history of Equity Awards account transactions to be downloaded). These are to be downloaded in JSON format. Instructions are available at the top of the [parser file](../main/cgt_calc/parsers/schwab_equity_award_json.py).
--   Exported transaction history from Trading 212.
-    You can use several files here since Trading 212 limit the statements to 1 year periods.
-    [See example](https://github.com/KapJI/capital-gains-calculator/tree/main/tests/test_data/trading212).
--   Exported transaction history from Morgan Stanley.
-    Since Morgan Stanley generates multiple files in a single report, please specify a directory produced from the report download page.
--   Exported transaction history from Sharesight
-    Sharesight is a portfolio tracking tool with support for multiple brokers.
+- Exported transaction history from Schwab in CSV format since the beginning.
+  Or at least since you first acquired the shares, which you were holding during the tax year. Schwab only allows to download transaction for the last 4 years so keep it safe. After that you may need to restore transactions from PDF statements.
+  [See example](https://github.com/xmanatee/capital-gains-calculator/blob/main/tests/test_data/schwab_transactions.csv).
+- Exported transaction history from Schwab Equity Awards (e.g. for Alphabet/Google employees) since the beginning (Note: Schwab now allows for the whole history of Equity Awards account transactions to be downloaded). These are to be downloaded in JSON format. Instructions are available at the top of the [parser file](../main/cgt_calc/parsers/schwab_equity_award_json.py).
+- Exported transaction history from Trading 212.
+  You can use several files here since Trading 212 limit the statements to 1 year periods.
+  [See example](https://github.com/xmanatee/capital-gains-calculator/tree/main/tests/test_data/trading212).
+- Exported transaction history from Morgan Stanley.
+  Since Morgan Stanley generates multiple files in a single report, please specify a directory produced from the report download page.
+- Exported transaction history from Sharesight
+  Sharesight is a portfolio tracking tool with support for multiple brokers.
 
     You will need the "All Trades" and "Taxable Income" reports since the beginning.
     Make sure to select "Since Inception" for the period, and "Not Grouping".
@@ -89,12 +89,12 @@ You will need several input files:
 
     Since there is no direct support for equity grants, add `Stock Activity` as part of the comment associated with any vesting transactions - making sure they have the grant price filled.
 
-    [See example](https://github.com/KapJI/capital-gains-calculator/tree/main/tests/test_data/sharesight).
+    [See example](https://github.com/xmanatee/capital-gains-calculator/tree/main/tests/test_data/sharesight).
 
--   CSV file with initial stock prices in USD at the moment of vesting, split, etc.
-    [`initial_prices.csv`](https://github.com/KapJI/capital-gains-calculator/blob/main/cgt_calc/resources/initial_prices.csv) comes pre-packaged, you need to use the same format.
--   (Optional) Monthly exchange rates prices from [gov.uk](https://www.gov.uk/government/collections/exchange-rates-for-customs-and-vat).
-    `exchange_rates.csv` gets generated automatically using HMRC API, you need to use the same format if you want to override it.
+- CSV file with initial stock prices in USD at the moment of vesting, split, etc.
+  [`initial_prices.csv`](https://github.com/xmanatee/capital-gains-calculator/blob/main/cgt_calc/resources/initial_prices.csv) comes pre-packaged, you need to use the same format.
+- (Optional) Monthly exchange rates prices from [gov.uk](https://www.gov.uk/government/collections/exchange-rates-for-customs-and-vat).
+  `exchange_rates.csv` gets generated automatically using HMRC API, you need to use the same format if you want to override it.
 
 Then run (you can omit the brokers you don't use):
 
@@ -119,9 +119,9 @@ Feel free to add new parsers to support transaction history from more brokers.
 
 This project uses [Poetry](https://python-poetry.org/) for managing dependencies.
 
--   For local testing you need to [install it](https://python-poetry.org/docs/#installation).
--   After that run `poetry install` to install all dependencies.
--   Then activate `pre-commit` hook: `poetry run pre-commit install`
+- For local testing you need to [install it](https://python-poetry.org/docs/#installation).
+- After that run `poetry install` to install all dependencies.
+- Then activate `pre-commit` hook: `poetry run pre-commit install`
 
 You can also run all linters and tests manually with this command:
 

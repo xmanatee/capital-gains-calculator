@@ -2,50 +2,28 @@
 
 from __future__ import annotations
 
-import csv
-import datetime
-from decimal import Decimal
+from collections import defaultdict
 from importlib import resources
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from cgt_calc.const import DEFAULT_INITIAL_PRICES_FILE
-from cgt_calc.exceptions import UnexpectedColumnCountError
+from cgt_calc.parsers.initial_prices import InitialPricesParser
+from cgt_calc.parsers.mssb import read_mssb_transactions
+from cgt_calc.parsers.raw import read_raw_transactions
+from cgt_calc.parsers.schwab import read_schwab_transactions
+from cgt_calc.parsers.schwab_equity_award_json import (
+    read_schwab_equity_award_json_transactions,
+)
+from cgt_calc.parsers.sharesight import read_sharesight_transactions
+from cgt_calc.parsers.trading212 import read_trading212_transactions
 from cgt_calc.resources import RESOURCES_PACKAGE
 
-from .mssb import read_mssb_transactions
-from .raw import read_raw_transactions
-from .schwab import read_schwab_transactions
-from .schwab_equity_award_json import read_schwab_equity_award_json_transactions
-from .sharesight import read_sharesight_transactions
-from .trading212 import read_trading212_transactions
-
 if TYPE_CHECKING:
+    from datetime import date
+    from decimal import Decimal
+
     from cgt_calc.model import BrokerTransaction
-
-INITIAL_PRICES_COLUMNS_NUM: Final = 3
-
-
-class InitialPricesEntry:
-    """Entry from initial stock prices file."""
-
-    def __init__(self, row: list[str], file: str):
-        """Create entry from CSV row."""
-        if len(row) != INITIAL_PRICES_COLUMNS_NUM:
-            raise UnexpectedColumnCountError(row, INITIAL_PRICES_COLUMNS_NUM, file)
-        # date,symbol,price
-        self.date = self._parse_date(row[0])
-        self.symbol = row[1]
-        self.price = Decimal(row[2])
-
-    @staticmethod
-    def _parse_date(date_str: str) -> datetime.date:
-        """Parse date from string."""
-        return datetime.datetime.strptime(date_str, "%b %d, %Y").date()
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"date: {self.date}, symbol: {self.symbol}, price: {self.price}"
 
 
 def read_broker_transactions(
@@ -99,24 +77,22 @@ def read_broker_transactions(
 
 def read_initial_prices(
     initial_prices_file: str | None,
-) -> dict[datetime.date, dict[str, Decimal]]:
+) -> dict[date, dict[str, Decimal]]:
     """Read initial stock prices from CSV file."""
-    initial_prices: dict[datetime.date, dict[str, Decimal]] = {}
-    if initial_prices_file is None:
-        with (
-            resources.files(RESOURCES_PACKAGE)
-            .joinpath(DEFAULT_INITIAL_PRICES_FILE)
-            .open(encoding="utf-8") as csv_file
-        ):
-            lines = list(csv.reader(csv_file))
+
+    if initial_prices_file:
+        date_symbol_price_list = InitialPricesParser().parse_file(
+            Path(initial_prices_file)
+        )
     else:
-        with Path(initial_prices_file).open(encoding="utf-8") as csv_file:
-            lines = list(csv.reader(csv_file))
-    lines = lines[1:]
-    for row in lines:
-        entry = InitialPricesEntry(row, initial_prices_file or "default")
-        date_index = entry.date
-        if date_index not in initial_prices:
-            initial_prices[date_index] = {}
-        initial_prices[date_index][entry.symbol] = entry.price
+        traversable_res = resources.files(RESOURCES_PACKAGE).joinpath(
+            DEFAULT_INITIAL_PRICES_FILE
+        )
+        with resources.as_file(traversable_res) as path:
+            date_symbol_price_list = InitialPricesParser().parse_file(path)
+
+    initial_prices: dict[date, dict[str, Decimal]] = defaultdict(dict)
+
+    for date_, symbol, price in date_symbol_price_list:
+        initial_prices[date_][symbol] = price
     return initial_prices

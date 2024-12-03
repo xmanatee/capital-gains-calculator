@@ -2,199 +2,58 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator
 import csv
-from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING
 
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.exceptions import InvalidTransactionError, ParsingError
 from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.parsers.base import Column, CsvParser
+import cgt_calc.parsers.field_parsers as parse
 
-STOCK_ACTIVITY_COMMENT_MARKER: Final[str] = "Stock Activity"
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
+    from cgt_calc.parsers.base import ParsedRowType
+    from cgt_calc.parsers.field_parsers import ParsedFieldType
 
-def parse_date(val: str) -> date:
-    """Parse a Sharesight report date."""
+STOCK_ACTIVITY_COMMENT_MARKER = "Stock Activity"
 
-    return datetime.strptime(val, "%d/%m/%Y").date()
-
-
-def parse_decimal(val: str) -> Decimal:
-    """Convert value to Decimal."""
-    try:
-        return Decimal(val.replace(",", ""))
-    except InvalidOperation:
-        raise ValueError(f"Bad decimal: {val}") from None
-
-
-def maybe_decimal(val: str) -> Decimal | None:
-    """Convert value to Decimal."""
-    return parse_decimal(val) if val else None
-
-
-class SharesightTransaction(BrokerTransaction):
-    """Sharesight transaction.
-
-    Just a marker type for now
-    """
+SHARESIGHT_TRADE_COLUMNS = [
+    Column("Market", str),
+    Column("Code", parse.symbol),
+    Column("Date", parse.date_format("%d/%m/%Y")),
+    Column("Type", parse.one_of(["Buy", "Sell"])),
+    Column("Quantity", parse.decimal),
+    Column("Price *", parse.decimal),
+    Column("Brokerage *", parse.optional(parse.decimal, Decimal(0))),
+    Column("Value", parse.optional(parse.decimal)),
+    Column("Currency", str),
+    Column("Comments", str),
+]
 
 
-class RowIterator(Iterator[list[str]]):
-    """Iterator for CSV rows that keeps track of line number."""
+class SharesightTradesParser(CsvParser):
+    """Parser for Sharesight All Trades Report."""
 
-    def __init__(self, rows: Iterable[list[str]]) -> None:
-        """Initialise RowIterator."""
-        self.rows = iter(rows)
-        self.line = 1
+    def required_columns(self) -> list[Column]:
+        return SHARESIGHT_TRADE_COLUMNS
 
-    def __next__(self) -> list[str]:
-        """Produce next element and increment line number."""
-        elm = next(self.rows)
-        self.line += 1
-        return elm
+    def parse_row(
+        self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
+    ) -> BrokerTransaction:
+        action = ActionType.BUY if row["Type"] == "Buy" else ActionType.SELL
 
-    def __iter__(self) -> RowIterator:
-        """Return an iterator for this object."""
-        return self
-
-
-def parse_dividend_payments(
-    rows: Iterator[list[str]],
-) -> Iterable[SharesightTransaction]:
-    """Parse dividend payments from Sharesight data.
-
-    This is the section started with a "Foreign Income" or "Local Income" header.
-    We parse those two sections very similarly, so we use one function.
-    """
-
-    columns = next(rows, None)
-    if columns is None:
-        return
-
-    for row in rows:
-        if row[0] == "Total":
-            # Don't use the totals row, but it signals the end of the section
-            break
-
-        row_dict = dict(zip(columns, row))
-
-        dividend_date = parse_date(row_dict["Date Paid"])
-        symbol = row_dict["Code"]
-        symbol = TICKER_RENAMES.get(symbol, symbol)
-        description = row_dict["Comments"]
-        broker = "Sharesight"
-
-        currency = row_dict.get("Currency")
-        # If we have a currency this is foreign income, otherwise it's local
-        if currency:
-            amount = parse_decimal(row_dict["Gross Amount"])
-            tax = maybe_decimal(row_dict["Foreign Tax Deducted"])
-        else:
-            amount = parse_decimal(row_dict["Gross Dividend"])
-            tax = maybe_decimal(row_dict["Tax Deducted"])
-            # Local income must be in GBP, otherwise why are you using this tool?
-            currency = "GBP"
-
-        yield SharesightTransaction(
-            date=dividend_date,
-            action=ActionType.DIVIDEND,
-            symbol=symbol,
-            description=description,
-            broker=broker,
-            currency=currency,
-            amount=amount,
-            quantity=None,
-            price=None,
-            fees=Decimal(0),
-        )
-
-        # Generate the tax as a separate transaction
-        if tax:
-            yield SharesightTransaction(
-                date=dividend_date,
-                action=ActionType.TAX,
-                symbol=symbol,
-                description=description,
-                broker=broker,
-                currency=currency,
-                amount=-tax,
-                quantity=None,
-                price=None,
-                fees=Decimal(0),
-            )
-
-
-def parse_local_income(rows: Iterator[list[str]]) -> Iterable[SharesightTransaction]:
-    """Parse Local Income section from Sharesight data.
-
-    This basically just yields to `parse_dividend_payments`, but we skip the
-    header lines
-    """
-
-    for row in rows:
-        if row[0] == "Total Local Income":
-            return
-
-        if row[0] == "Dividend Payments":
-            yield from parse_dividend_payments(rows)
-
-
-def parse_foreign_income(rows: Iterator[list[str]]) -> Iterable[SharesightTransaction]:
-    """Parse Foreign Income section from Sharesight data."""
-
-    yield from parse_dividend_payments(rows)
-
-
-def parse_income_report(file: Path) -> Iterable[SharesightTransaction]:
-    """Parse the Taxable Income Report from Sharesight."""
-
-    with file.open(encoding="utf-8") as csv_file:
-        rows = list(csv.reader(csv_file))
-
-    # Use our custom iterator for error reporting
-    rows_iter = RowIterator(rows)
-    try:
-        for row in rows_iter:
-            if row[0] == "Local Income":
-                yield from parse_local_income(rows_iter)
-            elif row[0] == "Foreign Income":
-                yield from parse_foreign_income(rows_iter)
-    except ValueError as err:
-        raise ParsingError(f"{file}:{rows_iter.line}", str(err)) from None
-
-
-def parse_trades(
-    columns: list[str], rows: Iterator[list[str]]
-) -> Iterable[SharesightTransaction]:
-    """Parse content in All Trades Report from Sharesight."""
-
-    for row in rows:
-        if not any(row):
-            # There is an empty row at the end of the trades list
-            break
-
-        row_dict = dict(zip(columns, row))
-        tpe = row_dict["Type"]
-        if tpe == "Buy":
-            action = ActionType.BUY
-        elif tpe == "Sell":
-            action = ActionType.SELL
-        else:
-            raise ValueError(f"Unknown action: {tpe}")
-
-        market = row_dict["Market"]
-        symbol = f"{market}:{row_dict['Code']}"
-        trade_date = parse_date(row_dict["Date"])
-        quantity = parse_decimal(row_dict["Quantity"])
-        price = parse_decimal(row_dict["Price *"])
-        fees = maybe_decimal(row_dict["Brokerage *"]) or Decimal(0)
-        currency = row_dict["Currency"]
-        description = row_dict["Comments"]
-        broker = "Sharesight"
-        gbp_value = maybe_decimal(row_dict["Value"])
+        market = row["Market"]
+        symbol = f"{market}:{row['Code']}"
+        quantity = row["Quantity"]
+        price = row["Price *"]
+        fees = row["Brokerage *"] or Decimal(0)
+        currency = row["Currency"]
+        description = row["Comments"]
+        gbp_value = row["Value"]
 
         # Sharesight's reports conventions are slightly different from our
         # conventions:
@@ -209,18 +68,14 @@ def parse_trades(
             # for cryptocurrency transactions
             if not gbp_value:
                 raise ValueError("Missing Value in FX transaction")
-
             price = abs(gbp_value / quantity)
             currency = "GBP"
 
-        # Make amount positive on sell and negative on buy
         amount = -(quantity * price) - fees
-        # Make quantity always positive
         quantity = abs(quantity)
 
-        # Create the transaction object now so we can report it in exceptions
-        transaction = SharesightTransaction(
-            date=trade_date,
+        transaction = BrokerTransaction(
+            date=row["Date"],
             action=action,
             symbol=symbol,
             description=description,
@@ -229,7 +84,7 @@ def parse_trades(
             fees=fees,
             amount=amount,
             currency=currency,
-            broker=broker,
+            broker="Sharesight",
         )
 
         # Sharesight has no native support for stock activity, so use a string
@@ -240,54 +95,148 @@ def parse_trades(
                 raise InvalidTransactionError(
                     transaction, "Stock activity must have Type=Buy"
                 )
-
             transaction.action = ActionType.STOCK_ACTIVITY
             transaction.amount = None
 
-        yield transaction
+        return transaction
+
+    def parse_file(self, file: Path) -> list[BrokerTransaction]:
+        transactions = []
+        with file.open(encoding="utf-8") as csv_file:
+            reader = csv.reader(csv_file)
+            # Skip to the header row
+            for row_line in reader:
+                if row_line and row_line[0] == "Market":
+                    headers = row_line
+                    break
+            else:
+                raise ParsingError(str(file), "Could not find header row")
+
+            for row_values in reader:
+                if not any(row_values):
+                    break  # End of trades section
+                row = dict(zip(headers, row_values))
+                parsed_row = {}
+                for col in self.required_columns():
+                    parsed_row.update(col.parse(row))
+                transaction = self.parse_row(parsed_row, row)
+                transactions.append(transaction)
+        return transactions
 
 
-def parse_trade_report(file: Path) -> Iterable[SharesightTransaction]:
-    """Parse All Trades Report from Sharesight."""
+class SharesightIncomeParser(CsvParser):
+    """Parser for Sharesight Taxable Income Report."""
 
-    with file.open(encoding="utf-8") as csv_file:
-        rows = list(csv.reader(csv_file))
+    def required_columns(self) -> list[Column]:
+        # Columns vary between sections; we'll handle them dynamically
+        return []
 
-    # Use our custom iterator for error reporting
-    rows_iter = RowIterator(rows)
-    for row in rows_iter:
-        # Skip everything until we find the header
-        if row[0] == "Market":
-            columns = row
-            try:
-                yield from parse_trades(columns, rows_iter)
-            except (InvalidOperation, ValueError) as err:
-                raise ParsingError(f"{file}:{rows_iter.line}", str(err)) from None
+    def parse_row(
+        self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
+    ) -> ParsedRowType:
+        pass
+
+    def parse_file(self, file: Path) -> list[BrokerTransaction]:
+        transactions = []
+
+        with file.open(encoding="utf-8") as csv_file:
+            rows = list(csv.reader(csv_file))
+
+        rows_iter = iter(rows)
+        for row in rows_iter:
+            if row[0] == "Local Income":
+                transactions += self.parse_local_income(rows_iter)
+            elif row[0] == "Foreign Income":
+                transactions += self.parse_dividend_payments(rows_iter, is_foreign=True)
+        return transactions
+
+    def parse_local_income(
+        self, rows_iter: Iterator[list[str]]
+    ) -> list[BrokerTransaction]:
+        transactions = []
+        for row in rows_iter:
+            if row[0] == "Total Local Income":
+                break
+            if row[0] == "Dividend Payments":
+                transactions += self.parse_dividend_payments(
+                    rows_iter, is_foreign=False
+                )
+        return transactions
+
+    def parse_dividend_payments(
+        self, rows_iter: Iterator[list[str]], is_foreign: bool
+    ) -> list[BrokerTransaction]:
+        transactions: list[BrokerTransaction] = []
+        columns = next(rows_iter, None)
+        if columns is None:
+            return transactions
+
+        for row in rows_iter:
+            if row[0] == "Total":
+                break
+            row_dict = dict(zip(columns, row))
+
+            dividend_date = parse.date_format("%d/%m/%Y")(row_dict["Date Paid"])
+            symbol = row_dict["Code"]
+            symbol = TICKER_RENAMES.get(symbol, symbol)
+            description = row_dict["Comments"]
+
+            if is_foreign:
+                currency = row_dict["Currency"]
+                amount = parse.decimal(row_dict["Gross Amount"])
+                tax = parse.optional(parse.decimal)(row_dict["Foreign Tax Deducted"])
+            else:
+                amount = parse.decimal(row_dict["Gross Dividend"])
+                tax = parse.optional(parse.decimal)(row_dict["Tax Deducted"])
+                currency = "GBP"
+
+            transactions.append(
+                BrokerTransaction(
+                    date=dividend_date,
+                    action=ActionType.DIVIDEND,
+                    symbol=symbol,
+                    description=description,
+                    broker="Sharesight",
+                    currency=currency,
+                    amount=amount,
+                    quantity=None,
+                    price=None,
+                    fees=Decimal(0),
+                )
+            )
+
+            if tax:
+                transactions.append(
+                    BrokerTransaction(
+                        date=dividend_date,
+                        action=ActionType.TAX,
+                        symbol=symbol,
+                        description=description,
+                        broker="Sharesight",
+                        currency=currency,
+                        amount=-tax,
+                        quantity=None,
+                        price=None,
+                        fees=Decimal(0),
+                    )
+                )
+        return transactions
 
 
 def read_sharesight_transactions(
     transactions_folder: str,
-) -> list[SharesightTransaction]:
+) -> list[BrokerTransaction]:
     """Parse Sharesight transactions from reports."""
 
-    transactions: list[SharesightTransaction] = []
+    transactions: list[BrokerTransaction] = []
+    trades_parser = SharesightTradesParser()
+    income_parser = SharesightIncomeParser()
+
     for file in Path(transactions_folder).glob("*.csv"):
         if file.match("Taxable Income Report*.csv"):
-            income_transactions = list(parse_income_report(file))
-            if not income_transactions:
-                print(f"WARNING: no transactions detected in file {file}")
-            else:
-                transactions += income_transactions
-
+            transactions += income_parser.parse_file(file)
         if file.match("All Trades Report*.csv"):
-            trade_transactions = list(parse_trade_report(file))
-            if not trade_transactions:
-                print(f"WARNING: no transactions detected in file {file}")
-            else:
-                transactions += trade_transactions
+            transactions += trades_parser.parse_file(file)
 
-    def key(transaction: SharesightTransaction) -> date:
-        return transaction.date
-
-    transactions.sort(key=key)
+    transactions.sort(key=lambda t: t.date)
     return transactions

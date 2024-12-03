@@ -1,6 +1,24 @@
 INFO: No schwab file provided
 INFO: No schwab Equity Award JSON file provided
-Parsing tests/test_data/trading212_2024/transactions.csv
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Currency conversion fee' when calculating fees
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Currency conversion fee' when calculating fees
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Currency conversion fee' when calculating fees
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Currency conversion fee' when calculating fees
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Withholding tax' when calculating fees
+WARNING: ignoring currency of 'Transaction fee' when calculating fees
+WARNING: ignoring currency of 'Currency conversion fee' when calculating fees
 INFO: No mssb folder provided
 INFO: No sharesight file provided
 INFO: No raw file provided

@@ -111,10 +111,15 @@ def action_from_str(label: str) -> ActionType:
     if label in {"Stock Plan Activity", "Deposit"}:
         return ActionType.STOCK_ACTIVITY
 
-    if label in ["Qualified Dividend", "Cash Dividend"]:
+    if label in ["Qualified Dividend", "Cash Dividend", "Dividend"]:
         return ActionType.DIVIDEND
 
-    if label in ["NRA Tax Adj", "NRA Withholding", "Foreign Tax Paid"]:
+    if label in [
+        "NRA Tax Adj",
+        "NRA Withholding",
+        "Foreign Tax Paid",
+        "Tax Withholding",
+    ]:
         return ActionType.TAX
 
     if label == "ADR Mgmt Fee":
@@ -280,14 +285,18 @@ class SchwabTransaction(BrokerTransaction):
                             )
 
                     quantity = (amount + fees) / price
-
         else:
-            raise ParsingError(
-                file, f"Parsing for action {row[names.action]} is not implemented!"
+            date = datetime.datetime.strptime(row[names.date], "%m/%d/%Y").date()
+            price = None
+            print(
+                f"WARNING: Parsing for action {row[names.action]} is not implemented!"
             )
+            # raise ParsingError(
+            #     file, f"Parsing for action {row[names.action]} is not implemented!"
+            # )
 
         currency = "USD"
-        broker = "Charles Schwab"
+        broker = "Charles Schwab Awards"
         super().__init__(
             date,
             action,

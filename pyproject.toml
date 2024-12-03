@@ -5,8 +5,8 @@ description = "UK capital gains tax calculator for Charles Schwab and Trading 21
 authors = ["Ruslan Sayfutdinov <ruslan@sayfutdinov.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/KapJI/capital-gains-calculator"
-repository = "https://github.com/KapJI/capital-gains-calculator"
+homepage = "https://github.com/xmanatee/capital-gains-calculator"
+repository = "https://github.com/xmanatee/capital-gains-calculator"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
@@ -21,8 +21,8 @@ keywords = [
 ]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/KapJI/capital-gains-calculator/issues"
-"Release Notes" = "https://github.com/KapJI/capital-gains-calculator/releases"
+"Bug Tracker" = "https://github.com/xmanatee/capital-gains-calculator/issues"
+"Release Notes" = "https://github.com/xmanatee/capital-gains-calculator/releases"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -402,6 +402,11 @@ ignore = [
     "E111",
     "E114",
     "E117",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D107",
     "D206",
     "D300",
     "Q",
