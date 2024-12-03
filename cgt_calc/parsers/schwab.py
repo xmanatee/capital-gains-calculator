@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -72,7 +73,7 @@ def parse_schwab_action(label: str) -> ActionType:
 def parse_schwab_date(date_str: str) -> datetime.date:
     as_of_str = " as of "
     if as_of_str in date_str:
-        date_str = date_str.split(as_of_str)[1]
+        date_str = date_str.split(as_of_str)[0]
     return datetime.datetime.strptime(date_str, "%m/%d/%Y").date()
 
 
@@ -139,17 +140,23 @@ class SchwabParser(CsvParser):
 
     def parse_file(self, file: Path) -> list[BrokerTransaction]:
         transactions = super().parse_file(file)
-        for transaction in transactions:
-            if (
-                transaction.price is None
-                and transaction.action == ActionType.STOCK_ACTIVITY
-            ):
-                if not transaction.symbol:
+        # Handle "Rule 10b5-1 Trading Plan":
+        auto_sell_prices: dict[datetime.date, dict[str, str]] = defaultdict(dict)
+        for tx in transactions:
+            if tx.action == ActionType.SELL:
+                auto_sell_prices[tx.date][tx.symbol] = tx.price
+        for tx in transactions:
+            if tx.action == ActionType.STOCK_ACTIVITY and tx.price is None:
+                if not tx.symbol:
                     raise ParsingError(str(file), "Missing symbol in stock activity")
-                print(
-                    "Leaving price blank for STOCK_ACTIVITY action from "
-                    f"{transaction.date}"
-                )
+                if tx.symbol not in auto_sell_prices[tx.date]:
+                    print(
+                        "WARNING: Leaving price blank for STOCK_ACTIVITY action "
+                        f"from {tx.date} for {tx.symbol}"
+                    )
+                    continue
+                tx.price = auto_sell_prices[tx.date][tx.symbol]
+
         transactions = self.unify_cash_merger_transactions(transactions)
         transactions.reverse()
 

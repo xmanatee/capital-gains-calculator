@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cgt-calc"
-version = "0.0.0"
+version = "0.0.1"
 description = "UK capital gains tax calculator for Charles Schwab and Trading 212 accounts"
 authors = ["Ruslan Sayfutdinov <ruslan@sayfutdinov.com>"]
 license = "MIT"
