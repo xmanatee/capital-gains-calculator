@@ -11,10 +11,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cgt_calc.calculator import CapitalGainsCalculator
 from cgt_calc.currency_converter import CurrencyConverter
 from cgt_calc.current_price_fetcher import CurrentPriceFetcher
+from cgt_calc.hmrc_transactions import HmrcTransactions
 from cgt_calc.initial_prices import InitialPrices
-from cgt_calc.main import CapitalGainsCalculator
 from cgt_calc.spin_off_handler import SpinOffHandler
 from cgt_calc.util import round_decimal
 
@@ -26,11 +27,13 @@ if TYPE_CHECKING:
 
 
 def get_report(
-    calculator: CapitalGainsCalculator, broker_transactions: list[BrokerTransaction]
+    hmrc_transactions: HmrcTransactions,
+    calculator: CapitalGainsCalculator,
+    broker_transactions: list[BrokerTransaction],
 ) -> CapitalGainsReport:
     """Get calculation report."""
-    calculator.convert_to_hmrc_transactions(broker_transactions)
-    return calculator.calculate_capital_gain()
+    hmrc_transactions.from_broker_transactions(broker_transactions)
+    return calculator.calculate_capital_gain(hmrc_transactions)
 
 
 @pytest.mark.parametrize(
@@ -66,15 +69,19 @@ def test_basic(
     spin_off_handler = SpinOffHandler()
     spin_off_handler.cache = {"BAR": "FOO"}
     initial_prices = InitialPrices({})
-    calculator = CapitalGainsCalculator(
+    hmrc_transactions = HmrcTransactions(
         tax_year,
         converter,
         price_fetcher,
         spin_off_handler,
         initial_prices,
+    )
+    calculator = CapitalGainsCalculator(
+        tax_year,
+        price_fetcher,
         calc_unrealized_gains=expected_unrealized is not None,
     )
-    report = get_report(calculator, broker_transactions)
+    report = get_report(hmrc_transactions, calculator, broker_transactions)
     assert report.total_gain() == round_decimal(Decimal(expected), 2)
     print(str(report))
     if expected_unrealized is not None:
