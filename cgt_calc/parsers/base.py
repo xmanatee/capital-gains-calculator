@@ -39,7 +39,7 @@ class CsvParser(ABC):
             reader = csv.reader(csv_file)
             headers = next(reader)
             for col in self.required_columns():
-                if col.csv_name not in headers:
+                if not col.is_present(headers):
                     return False
         return True
 
