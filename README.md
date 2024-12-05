@@ -96,6 +96,12 @@ You will need several input files:
 - (Optional) Monthly exchange rates prices from [gov.uk](https://www.gov.uk/government/collections/exchange-rates-for-customs-and-vat).
   `exchange_rates.csv` gets generated automatically using HMRC API, you need to use the same format if you want to override it.
 
+Fetch exchange rates form HMRC APIs:
+
+```shell
+poetry run fetch-exchange-rates
+```
+
 Then run (you can omit the brokers you don't use):
 
 ```shell

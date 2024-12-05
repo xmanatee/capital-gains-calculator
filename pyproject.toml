@@ -45,6 +45,7 @@ types-defusedxml = "^0.7.0.20240218"
 
 [tool.poetry.scripts]
 cgt-calc = 'cgt_calc.main:init'
+fetch-exchange-rates = 'cgt_calc.tools.fetch_exchange_rates:run'
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -406,6 +407,7 @@ ignore = [
     "D101",
     "D102",
     "D103",
+    "D104",
     "D107",
     "D206",
     "D300",

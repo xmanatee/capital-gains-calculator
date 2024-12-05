@@ -50,7 +50,7 @@ def main() -> int:
         args.sharesight,
         args.raw,
     )
-    converter = CurrencyConverter(args.exchange_rates_file)
+    converter = CurrencyConverter(["USD", "AUD", "RUB", "CNY", "INR"])
     initial_prices = InitialPrices(read_initial_prices(args.initial_prices))
     price_fetcher = CurrentPriceFetcher(converter)
     spin_off_handler = SpinOffHandler(args.spin_offs_file)
@@ -93,7 +93,6 @@ def main() -> int:
 
 
 def init() -> None:
-    """Entry point."""
     sys.exit(main())
 
 

@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-"""Capital Gain Calculator main module."""
-
 from __future__ import annotations
 
 from collections import defaultdict
@@ -54,8 +51,6 @@ def _approx_equal(val_a: Decimal, val_b: Decimal) -> bool:
 
 
 class HmrcTransactions:
-    """Main calculator class."""
-
     def __init__(
         self,
         tax_year: int,

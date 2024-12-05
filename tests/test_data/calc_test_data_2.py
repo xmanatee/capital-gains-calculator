@@ -31,7 +31,6 @@ calc_basic_data_2 = [
         ],
         0.0,  # Expected capital gain/loss
         2.0,  # Expected unrealized gains
-        None,  # GBP/USD prices
         {"FOO": 6},  # Current prices
         {
             datetime.date(day=1, month=5, year=2023): {
@@ -121,7 +120,6 @@ calc_basic_data_2 = [
         ],
         2557.10,  # Expected capital gain/loss
         None,  # Expected unrealized gains
-        None,  # GBP/USD prices
         None,  # Current prices
         {
             datetime.date(day=25, month=6, year=2023): {

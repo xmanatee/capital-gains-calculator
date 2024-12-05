@@ -42,7 +42,6 @@ def get_report(
         "broker_transactions",
         "expected",
         "expected_unrealized",
-        "gbp_prices",
         "current_prices",
         "calculation_log",
     ),
@@ -53,14 +52,13 @@ def test_basic(
     broker_transactions: list[BrokerTransaction],
     expected: float,
     expected_unrealized: float | None,
-    gbp_prices: dict[datetime.date, dict[str, Decimal]] | None,
     current_prices: dict[str, Decimal | None] | None,
     calculation_log: CalculationLog | None,
 ) -> None:
     """Generate basic tests for test data."""
-    if gbp_prices is None:
-        gbp_prices = {t.date: {"USD": Decimal(1)} for t in broker_transactions}
-    converter = CurrencyConverter(None, gbp_prices)
+    converter = CurrencyConverter(
+        ["USD"], data_dir="tests/test_data/test_exchange_rates"
+    )
     historical_prices = {
         "FOO": {datetime.date(day=5, month=7, year=2023): Decimal(90)},
         "BAR": {datetime.date(day=5, month=7, year=2023): Decimal(12)},

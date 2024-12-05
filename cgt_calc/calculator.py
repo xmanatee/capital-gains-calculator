@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-"""Capital Gain Calculator main module."""
-
 from __future__ import annotations
 
 from collections import defaultdict
