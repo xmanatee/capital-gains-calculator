@@ -16,8 +16,8 @@ Final portfolio:
   GOOG: 163.20
   FOO: 30.50
 Final balance:
-  Charles Schwab: 9477.90 (USD)
-  Trading212: 33391.30 (GBP)
+  Schwab: 9477.90 (USD)
+  Trading 212: 33391.30 (GBP)
   Morgan Stanley: 1.00 (USD)
 Dividends: £0.10
 Dividend taxes: £0.00

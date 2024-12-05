@@ -10,7 +10,7 @@ Final portfolio:
   BABA: 30.00
   META: 119.00
 Final balance:
-  Unknown: -28486.60 (USD)
+  Unknown Broker: -28486.60 (USD)
 Dividends: £2719.29
 Dividend taxes: £0.00
 Interest: £0.00

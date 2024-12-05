@@ -17,6 +17,7 @@ from cgt_calc.exceptions import (
 )
 from cgt_calc.model import (
     ActionType,
+    Broker,
     BrokerTransaction,
     HmrcTransactionLog,
     Position,
@@ -264,7 +265,7 @@ class HmrcTransactions:
     ) -> None:
         """Convert broker transactions to HMRC transactions."""
         # We keep a balance per broker,currency pair
-        balance: dict[tuple[str, str], Decimal] = defaultdict(lambda: Decimal(0))
+        balance: dict[tuple[Broker, str], Decimal] = defaultdict(lambda: Decimal(0))
         dividends = Decimal(0)
         dividends_tax = Decimal(0)
         interest = Decimal(0)
@@ -272,7 +273,9 @@ class HmrcTransactions:
         balance_history: list[Decimal] = []
 
         for i, transaction in enumerate(transactions):
-            new_balance = balance[(transaction.broker, transaction.currency)]
+            new_balance = balance[
+                (transaction.broker_source.broker, transaction.currency)
+            ]
             if transaction.action is ActionType.TRANSFER:
                 new_balance += get_amount_or_fail(transaction)
             elif transaction.action in [
@@ -335,9 +338,12 @@ class HmrcTransactions:
                 )
             balance_history.append(new_balance)
             if self.balance_check and new_balance < 0:
-                msg = f"Reached a negative balance({new_balance})"
-                msg += f" for broker {transaction.broker} ({transaction.currency})"
-                msg += " after processing the following transactions:\n"
+                msg = (
+                    f"Reached a negative balance({new_balance}) for broker "
+                    f"'{transaction.broker_source.broker.readable_name}' "
+                    f"({transaction.currency}) after processing the following "
+                    "transactions:\n"
+                )
                 msg += "\n".join(
                     [
                         f"{trx}\nBalance after transaction={balance_after}"
@@ -347,14 +353,16 @@ class HmrcTransactions:
                     ]
                 )
                 raise CalculationError(msg)
-            balance[(transaction.broker, transaction.currency)] = new_balance
+            balance[(transaction.broker_source.broker, transaction.currency)] = (
+                new_balance
+            )
         print("First pass completed")
         print("Final portfolio:")
         for stock, position in self.portfolio.items():
             print(f"  {stock}: {position}")
         print("Final balance:")
         for (broker, currency), amount in balance.items():
-            print(f"  {broker}: {round_decimal(amount, 2)} ({currency})")
+            print(f"  {broker.readable_name}: {round_decimal(amount, 2)} ({currency})")
         print(f"Dividends: £{round_decimal(dividends, 2)}")
         print(f"Dividend taxes: £{round_decimal(-dividends_tax, 2)}")
         print(f"Interest: £{round_decimal(interest, 2)}")

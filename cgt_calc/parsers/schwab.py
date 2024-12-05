@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cgt_calc.exceptions import ParsingError
-from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvParser
 import cgt_calc.parsers.field_parsers as parse
 
@@ -100,7 +100,7 @@ class SchwabTransaction(BrokerTransaction):
             fees=fees,
             amount=amount,
             currency="USD",
-            broker="Charles Schwab",
+            broker_source=BrokerSource.SCHWAB_INDIVIDUAL,
         )
         self.raw_action = raw_action
 

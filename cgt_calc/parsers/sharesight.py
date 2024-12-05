@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.exceptions import InvalidTransactionError, ParsingError
-from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvParser
 import cgt_calc.parsers.field_parsers as parse
 
@@ -84,7 +84,7 @@ class SharesightTradesParser(CsvParser):
             fees=fees,
             amount=amount,
             currency=currency,
-            broker="Sharesight",
+            broker_source=BrokerSource.SHARESIGHT,
         )
 
         # Sharesight has no native support for stock activity, so use a string
@@ -196,7 +196,7 @@ class SharesightIncomeParser(CsvParser):
                     action=ActionType.DIVIDEND,
                     symbol=symbol,
                     description=description,
-                    broker="Sharesight",
+                    broker_source=BrokerSource.SHARESIGHT,
                     currency=currency,
                     amount=amount,
                     quantity=None,
@@ -212,7 +212,7 @@ class SharesightIncomeParser(CsvParser):
                         action=ActionType.TAX,
                         symbol=symbol,
                         description=description,
-                        broker="Sharesight",
+                        broker_source=BrokerSource.SHARESIGHT,
                         currency=currency,
                         amount=-tax,
                         quantity=None,

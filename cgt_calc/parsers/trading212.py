@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
 
-from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvParser
 import cgt_calc.parsers.field_parsers as parse
 
@@ -185,7 +185,7 @@ class Trading212Parser(CsvParser):
             fees=fees,
             amount=amount,
             currency=currency,
-            broker="Trading212",
+            broker_source=BrokerSource.TRADING_212,
         )
 
     def _calculate_fees(self, row: dict[str, ParsedFieldType]) -> Decimal:

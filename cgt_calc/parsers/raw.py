@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvParser
 import cgt_calc.parsers.field_parsers as parse
 
@@ -54,7 +54,7 @@ class RawParser(CsvParser):
             fees=fees,
             amount=amount,
             currency=row["currency"],
-            broker="Unknown",
+            broker_source=BrokerSource.UNKNOWN,
         )
 
 

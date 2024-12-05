@@ -8,7 +8,7 @@ import tempfile
 from typing import TYPE_CHECKING, Final
 
 from cgt_calc.const import TICKER_RENAMES
-from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvParser
 import cgt_calc.parsers.field_parsers as parse
 
@@ -69,7 +69,7 @@ class MorganStanleyReleaseParser(CsvParser):
             fees=Decimal(0),
             amount=amount,
             currency="USD",
-            broker="Morgan Stanley",
+            broker_source=BrokerSource.MSSB_RELEASE,
         )
 
 
@@ -113,7 +113,7 @@ class MorganStanleyWithdrawalParser(CsvParser):
             fees=fees,
             amount=amount,
             currency="USD",
-            broker="Morgan Stanley",
+            broker_source=BrokerSource.MSSB_WITHDRAWAL,
         )
 
         return self._handle_stock_split(transaction)

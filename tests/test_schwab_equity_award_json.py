@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 from decimal import Decimal
 
-from cgt_calc.model import ActionType
+from cgt_calc.model import ActionType, BrokerSource
 from cgt_calc.parsers import schwab_equity_award_json
 
 # ruff: noqa: SLF001 "Private member accessed"
@@ -62,7 +62,7 @@ def test_schwab_transaction_v1() -> None:
     assert transactions[0].price == Decimal("125.6445")
     assert transactions[0].fees == Decimal("0")
     assert transactions[0].currency == "USD"
-    assert transactions[0].broker == "Charles Schwab Awards"
+    assert transactions[0].broker_source == BrokerSource.SCHWAB_AWARDS
 
     assert transactions[1].date == datetime.date(2022, 6, 14)
     assert transactions[1].action == ActionType.SELL
@@ -118,7 +118,7 @@ def test_schwab_transaction_v2() -> None:
     assert transactions[3].price == Decimal("131.25")
     assert transactions[3].fees == Decimal("0")
     assert transactions[3].currency == "USD"
-    assert transactions[3].broker == "Charles Schwab Awards"
+    assert transactions[3].broker_source == BrokerSource.SCHWAB_AWARDS
 
     assert transactions[4].date == datetime.date(2023, 9, 25)
     assert transactions[4].action == ActionType.STOCK_ACTIVITY
@@ -127,4 +127,4 @@ def test_schwab_transaction_v2() -> None:
     assert transactions[4].price == Decimal("131.25")
     assert transactions[4].fees == Decimal("0")
     assert transactions[4].currency == "USD"
-    assert transactions[4].broker == "Charles Schwab Awards"
+    assert transactions[4].broker_source == BrokerSource.SCHWAB_AWARDS

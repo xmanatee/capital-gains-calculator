@@ -46,6 +46,31 @@ class HmrcTransactionData:
 HmrcTransactionLog = dict[datetime.date, dict[str, HmrcTransactionData]]
 
 
+class Broker(Enum):
+    UNKNOWN = "Unknown Broker"
+    SCHWAB = "Schwab"
+    MSSB = "Morgan Stanley"
+    SHARESIGHT = "Sharesight"
+    TRADING_212 = "Trading 212"
+
+    def __init__(self, readable_name: str):
+        self.readable_name = readable_name
+
+
+class BrokerSource(Enum):
+    UNKNOWN = ("Unknown Source", Broker.UNKNOWN)
+    SCHWAB_INDIVIDUAL = ("Schwab Individual", Broker.SCHWAB)
+    SCHWAB_AWARDS = ("Schwab Awards", Broker.SCHWAB)
+    MSSB_RELEASE = ("Morgan Stanley Release", Broker.MSSB)
+    MSSB_WITHDRAWAL = ("Morgan Stanley Withdrawal", Broker.MSSB)
+    SHARESIGHT = ("Sharesight", Broker.SHARESIGHT)
+    TRADING_212 = ("Trading 212", Broker.TRADING_212)
+
+    def __init__(self, readable_name: str, broker: Broker):
+        self.readable_name = readable_name
+        self.broker = broker
+
+
 class ActionType(Enum):
     """Type of transaction action."""
 
@@ -80,7 +105,7 @@ class BrokerTransaction:
     fees: Decimal
     amount: Decimal | None
     currency: str
-    broker: str
+    broker_source: BrokerSource
 
 
 class RuleType(Enum):

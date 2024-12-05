@@ -23,7 +23,7 @@ from typing import Any, Final
 
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.exceptions import ParsingError
-from cgt_calc.model import ActionType, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.util import round_decimal
 
 OPTIONAL_DETAILS_NAME: Final = "Details"
@@ -295,8 +295,6 @@ class SchwabTransaction(BrokerTransaction):
             #     file, f"Parsing for action {row[names.action]} is not implemented!"
             # )
 
-        currency = "USD"
-        broker = "Charles Schwab Awards"
         super().__init__(
             date,
             action,
@@ -306,8 +304,8 @@ class SchwabTransaction(BrokerTransaction):
             price,
             fees,
             amount,
-            currency,
-            broker,
+            "USD",
+            BrokerSource.SCHWAB_AWARDS,
         )
 
         self._normalize_split()

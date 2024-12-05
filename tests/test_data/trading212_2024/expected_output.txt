@@ -25,7 +25,7 @@ INFO: No raw file provided
 First pass completed
 Final portfolio:
 Final balance:
-  Trading212: 1758.05 (GBP)
+  Trading 212: 1758.05 (GBP)
 Dividends: £0.00
 Dividend taxes: £0.00
 Interest: £0.00
