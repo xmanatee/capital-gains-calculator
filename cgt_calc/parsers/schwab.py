@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 def parse_schwab_action(label: str) -> ActionType:
     """Convert string label to ActionType."""
-    if label == "Buy":
+    if label in {"Buy"}:
         return ActionType.BUY
     if label in {"Sell"}:
         return ActionType.SELL
@@ -45,29 +45,31 @@ def parse_schwab_action(label: str) -> ActionType:
         "Non-Qualified Div",
     ]:
         return ActionType.DIVIDEND
-    if label in ["NRA Tax Adj", "NRA Withholding", "Foreign Tax Paid"]:
+    if label in {"NRA Tax Adj", "NRA Withholding", "Foreign Tax Paid"}:
         return ActionType.TAX
-    if label == "ADR Mgmt Fee":
+    if label in {"ADR Mgmt Fee"}:
         return ActionType.FEE
-    if label in ["Adjustment", "IRS Withhold Adj", "Wire Funds Adj"]:
+    if label in {"Adjustment", "IRS Withhold Adj", "Wire Funds Adj"}:
         return ActionType.ADJUSTMENT
-    if label in ["Short Term Cap Gain", "Long Term Cap Gain"]:
+    if label in {"Short Term Cap Gain", "Long Term Cap Gain"}:
         return ActionType.CAPITAL_GAIN
     if label == "Spin-off":
         return ActionType.SPIN_OFF
-    if label == "Credit Interest":
+    if label in {"Credit Interest", "Bank Interest"}:
         return ActionType.INTEREST
-    if label == "Reinvest Shares":
+    if label in {"Reinvest Shares"}:
         return ActionType.REINVEST_SHARES
-    if label == "Reinvest Dividend":
+    if label in {"Reinvest Dividend"}:
         return ActionType.REINVEST_DIVIDENDS
-    if label == "Wire Funds Received":
+    if label in {"Wire Funds Received"}:
         return ActionType.WIRE_FUNDS_RECEIVED
-    if label == "Stock Split":
+    if label in {"Stock Split"}:
         return ActionType.STOCK_SPLIT
-    if label in ["Cash Merger", "Cash Merger Adj"]:
+    if label in {"Cash Merger", "Cash Merger Adj"}:
         return ActionType.CASH_MERGER
-    raise ParsingError("schwab transactions", f"Unknown action: {label}")
+
+    print(f"Unrecognized action in 'Schwab Transactions': {label}")
+    return ActionType.UNKNOWN
 
 
 def parse_schwab_date(date_str: str) -> datetime.date:
@@ -126,16 +128,20 @@ class SchwabParser(CsvParser):
     def parse_row(
         self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
     ) -> SchwabTransaction:
+        description=row["Description"] or ""
+        raw_action = raw_row["Action"]
+        if row["Action"] == ActionType.UNKNOWN:
+            description = f"Unknown action: {raw_action}\n{description}"
         return SchwabTransaction(
             date=row["Date"],
             action=row["Action"],
             symbol=row["Symbol"],
-            description=row["Description"] or "",
+            description=description,
             quantity=row["Quantity"],
             price=row["Price"],
             fees=row["Fees & Comm"] or Decimal(0),
             amount=row["Amount"],
-            raw_action=raw_row.get("Action", ""),
+            raw_action=raw_action,
         )
 
     def parse_file(self, file: Path) -> list[BrokerTransaction]:

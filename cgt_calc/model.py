@@ -74,6 +74,7 @@ class BrokerSource(Enum):
 class ActionType(Enum):
     """Type of transaction action."""
 
+    UNKNOWN = 0
     BUY = 1
     SELL = 2
     TRANSFER = 3
