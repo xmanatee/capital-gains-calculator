@@ -167,7 +167,6 @@ class CapitalGainsCalculator:
                     quantity=quantity,
                     amount=-amount,
                     new_quantity=quantity,
-                    gain=None,
                     # Fees, if any are already accounted on the acquisition of
                     # spined off shares
                     fees=Decimal(0),

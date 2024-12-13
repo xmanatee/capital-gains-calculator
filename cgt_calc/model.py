@@ -118,52 +118,25 @@ class RuleType(Enum):
     SPIN_OFF = 4
 
 
-class CalculationEntry:  # noqa: SIM119 # this has non-trivial constructor
-    """Calculation entry for final report."""
+@dataclass
+class CalculationEntry:
+    rule_type: RuleType
+    quantity: Decimal
+    amount: Decimal
+    fees: Decimal
+    new_quantity: Decimal
+    new_pool_cost: Decimal
+    gain: Decimal = Decimal(0)
+    allowable_cost: Decimal = Decimal(0)
+    bed_and_breakfast_date_index: Optional[datetime.date] = None
+    spin_off: Optional[SpinOff] = None
 
-    def __init__(
-        self,
-        rule_type: RuleType,
-        quantity: Decimal,
-        amount: Decimal,
-        fees: Decimal,
-        new_quantity: Decimal,
-        new_pool_cost: Decimal,
-        gain: Decimal | None = None,
-        allowable_cost: Decimal | None = None,
-        bed_and_breakfast_date_index: datetime.date | None = None,
-        spin_off: SpinOff | None = None,
-    ):
-        """Create calculation entry."""
-        self.rule_type = rule_type
-        self.quantity = quantity
-        self.amount = amount
-        self.allowable_cost = (
-            allowable_cost if allowable_cost is not None else Decimal(0)
-        )
-        self.fees = fees
-        self.gain = gain if gain is not None else Decimal(0)
-        self.new_quantity = new_quantity
-        self.new_pool_cost = new_pool_cost
-        self.bed_and_breakfast_date_index = bed_and_breakfast_date_index
-        self.spin_off = spin_off
+    def __post_init__(self):
         if self.amount >= 0 and self.rule_type is not RuleType.SPIN_OFF:
-            assert self.gain == self.amount - self.allowable_cost
-
-    def __repr__(self) -> str:
-        """Return print representation."""
-        return f"<CalculationEntry {self!s}>"
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return (
-            f"{self.rule_type.name.replace('_', ' ')}, "
-            f"quantity: {self.quantity}, "
-            f"disposal proceeds: {self.amount}, "
-            f"allowable cost: {self.allowable_cost}, "
-            f"fees: {self.fees}, "
-            f"gain: {self.gain}"
-        )
+            # Ensure gain is amount - allowable_cost if not explicitly set
+            # If gain is already set, assert it's consistent:
+            expected_gain = self.amount - self.allowable_cost
+            assert self.gain == expected_gain, f"gain ({self.gain}) != amount - allowable_cost ({expected_gain})"
 
 
 CalculationLog = dict[datetime.date, dict[str, list[CalculationEntry]]]
