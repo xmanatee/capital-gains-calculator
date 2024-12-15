@@ -333,7 +333,10 @@ class HmrcTransactions:
             elif transaction.action is ActionType.REINVEST_DIVIDENDS:
                 print(f"WARNING: Ignoring unsupported action: {transaction.action}")
             else:
-                print(f"WARNING: Ignoring unsupported transaction with action: {transaction}")
+                print(
+                    "WARNING: Ignoring unsupported transaction with action:"
+                    f" {transaction}"
+                )
             balance_history.append(new_balance)
             if self.balance_check and new_balance < 0:
                 msg = (

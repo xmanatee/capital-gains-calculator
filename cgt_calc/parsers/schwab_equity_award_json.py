@@ -10,9 +10,9 @@ from typing import Any, Final
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.exceptions import ParsingError
 from cgt_calc.model import BrokerSource, BrokerTransaction
-from cgt_calc.util import round_decimal
-from cgt_calc.parsers.schwab import parse_schwab_action
 import cgt_calc.parsers.field_parsers as parse
+from cgt_calc.parsers.schwab import parse_schwab_action
+from cgt_calc.util import round_decimal
 
 OPTIONAL_DETAILS_NAME: Final = "Details"
 FIELD_TO_SCHEMA: Final = {"transactions": 1, "Transactions": 2}
@@ -92,9 +92,7 @@ def _decimal_from_number_or_str(
         return Decimal(row[float_name])
 
     if field_basename in row and row[field_basename] is not None:
-        return parse.dollar_amount(
-            row[field_basename],
-            expect_dollar_sign=False)
+        return parse.dollar_amount(row[field_basename], expect_dollar_sign=False)
 
     return Decimal(0)
 
@@ -139,8 +137,8 @@ class SchwabTransaction(BrokerTransaction):
             ).date()
             # Schwab only provide this one as string:
             price = parse.dollar_amount(
-                details[names.vest_fair_market_value],
-                expect_dollar_sign=False)
+                details[names.vest_fair_market_value], expect_dollar_sign=False
+            )
             if amount == Decimal(0):
                 amount = price * quantity
             description = (
@@ -171,8 +169,8 @@ class SchwabTransaction(BrokerTransaction):
                     if "shares" in subtransac:
                         # Schwab only provides this one as a string:
                         shares = parse.dollar_amount(
-                            subtransac[names.shares],
-                            expect_dollar_sign=False)
+                            subtransac[names.shares], expect_dollar_sign=False
+                        )
                         subtransac_shares_sum += shares
                         if not _is_integer(shares):
                             found_share_decimals = True
@@ -194,9 +192,7 @@ class SchwabTransaction(BrokerTransaction):
                         OPTIONAL_DETAILS_NAME, first_subtransac
                     )
                     price_str = first_subtransac[names.sale_price]
-                    price = parse.dollar_amount(
-                        price_str,
-                        expect_dollar_sign=False)
+                    price = parse.dollar_amount(price_str, expect_dollar_sign=False)
 
                     for subtransac in row[names.transac_details][1:]:
                         subtransac = subtransac.get(OPTIONAL_DETAILS_NAME, subtransac)

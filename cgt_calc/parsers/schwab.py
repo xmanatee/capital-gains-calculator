@@ -133,7 +133,7 @@ class SchwabParser(CsvParser):
     def parse_row(
         self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
     ) -> SchwabTransaction:
-        description=row["Description"] or ""
+        description = row["Description"] or ""
         raw_action = raw_row["Action"]
         if row["Action"] == ActionType.UNKNOWN:
             description = f"Unknown action: {raw_action}\n{description}"

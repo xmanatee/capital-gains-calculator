@@ -1,8 +1,9 @@
 """Common field parsers for transaction files."""
 
+from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 from cgt_calc.const import TICKER_RENAMES
 
@@ -25,7 +26,7 @@ def dollar_amount(val: str, expect_dollar_sign=True) -> Decimal:
 
     if expect_dollar_sign:
         raise ValueError(f"Invalid dollar amount: {val}")
-    
+
     return Decimal(val)
 
 

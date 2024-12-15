@@ -10,6 +10,7 @@ from cgt_calc.parsers import schwab_equity_award_json
 
 # ruff: noqa: SLF001 "Private member accessed"
 
+
 def test_decimal_from_number_or_str_both() -> None:
     """Test _decimal_from_number_or_str() on float."""
     assert schwab_equity_award_json._decimal_from_number_or_str(

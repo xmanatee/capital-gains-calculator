@@ -1,9 +1,10 @@
 """Base classes and functions for parsers."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 import csv
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from cgt_calc.exceptions import ParsingError
 from cgt_calc.parsers.field_parsers import ParsedFieldType

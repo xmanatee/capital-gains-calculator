@@ -28,6 +28,7 @@ keywords = [
 python = "^3.9"
 defusedxml = "^0.7.1"
 Jinja2 = ">=2.11.3,<4.0.0"
+reportlab = "^4.2.5"
 pandas = "^2.2"
 requests = "^2.27.1"
 types-requests = "^2.27.7"
@@ -408,6 +409,8 @@ ignore = [
     "D102",
     "D103",
     "D104",
+    "D105",
+    "D106",
     "D107",
     "D206",
     "D300",
