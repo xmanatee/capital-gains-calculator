@@ -17,13 +17,16 @@ def decimal(val: str) -> Decimal:
         raise ValueError(f"Invalid decimal value: {val}") from err
 
 
-def dollar_amount(val: str) -> Decimal:
+def dollar_amount(val: str, expect_dollar_sign=True) -> Decimal:
     if val == "0":
         return Decimal(val)
     if val.startswith(("$", "-$")):
         return decimal(val.replace("$", ""))
 
-    raise ValueError(f"Invalid dollar amount: {val}")
+    if expect_dollar_sign:
+        raise ValueError(f"Invalid dollar amount: {val}")
+    
+    return Decimal(val)
 
 
 def symbol(val: str) -> str:

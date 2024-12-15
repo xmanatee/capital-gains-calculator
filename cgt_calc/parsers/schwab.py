@@ -21,7 +21,7 @@ def parse_schwab_action(label: str) -> ActionType:
     """Convert string label to ActionType."""
     if label in {"Buy"}:
         return ActionType.BUY
-    if label in {"Sell"}:
+    if label in {"Sell", "Sale"}:
         return ActionType.SELL
     if label in {
         "MoneyLink Transfer",
@@ -29,23 +29,28 @@ def parse_schwab_action(label: str) -> ActionType:
         "Service Fee",
         "Wire Funds",
         "Wire Sent",
+        "Wire Transfer",
         "Funds Received",
         "Journal",
         "Cash In Lieu",
     }:
         return ActionType.TRANSFER
-    if label in {"Stock Plan Activity"}:
+    if label in {"Stock Plan Activity", "Deposit"}:
         return ActionType.STOCK_ACTIVITY
     if label in [
         "Qualified Dividend",
         "Cash Dividend",
-        "Qual Div Reinvest",
         "Div Adjustment",
         "Special Qual Div",
         "Non-Qualified Div",
     ]:
         return ActionType.DIVIDEND
-    if label in {"NRA Tax Adj", "NRA Withholding", "Foreign Tax Paid"}:
+    if label in [
+        "NRA Tax Adj",
+        "NRA Withholding",
+        "Foreign Tax Paid",
+        "Tax Withholding",
+    ]:
         return ActionType.TAX
     if label in {"ADR Mgmt Fee"}:
         return ActionType.FEE
@@ -59,7 +64,7 @@ def parse_schwab_action(label: str) -> ActionType:
         return ActionType.INTEREST
     if label in {"Reinvest Shares"}:
         return ActionType.REINVEST_SHARES
-    if label in {"Reinvest Dividend"}:
+    if label in {"Qual Div Reinvest", "Reinvest Dividend"}:
         return ActionType.REINVEST_DIVIDENDS
     if label in {"Wire Funds Received"}:
         return ActionType.WIRE_FUNDS_RECEIVED
