@@ -5,13 +5,15 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvParser
 import cgt_calc.parsers.field_parsers as parse
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from cgt_calc.parsers.field_parsers import ParsedFieldType
 
 

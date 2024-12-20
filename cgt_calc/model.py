@@ -6,7 +6,6 @@ from dataclasses import dataclass
 import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 from .util import round_decimal
 
@@ -129,8 +128,8 @@ class CalculationEntry:
     new_pool_cost: Decimal
     gain: Decimal = Decimal(0)
     allowable_cost: Decimal = Decimal(0)
-    bed_and_breakfast_date_index: Optional[datetime.date] = None
-    spin_off: Optional[SpinOff] = None
+    bed_and_breakfast_date_index: datetime.date | None = None
+    spin_off: SpinOff | None = None
 
     def __post_init__(self) -> None:
         if self.amount >= 0 and self.rule_type is not RuleType.SPIN_OFF:

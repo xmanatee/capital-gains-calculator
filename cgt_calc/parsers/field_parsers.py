@@ -18,7 +18,7 @@ def decimal(val: str) -> Decimal:
         raise ValueError(f"Invalid decimal value: {val}") from err
 
 
-def dollar_amount(val: str, expect_dollar_sign=True) -> Decimal:
+def dollar_amount(val: str, expect_dollar_sign: bool = True) -> Decimal:
     if val == "0":
         return Decimal(val)
     if val.startswith(("$", "-$")):

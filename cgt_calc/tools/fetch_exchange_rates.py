@@ -85,7 +85,7 @@ class FetchExchangeRates:
 
                 response = session.get(url, timeout=20)
                 # response.raise_for_status()
-                if response.status_code != 200:
+                if response.status_code != requests.codes.OK:
                     date_str = month_date.strftime("%Y-%m-%d")
                     print(f"Failed fetching data for {date_str}")
                     continue
