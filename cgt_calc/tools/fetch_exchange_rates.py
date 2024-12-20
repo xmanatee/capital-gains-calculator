@@ -71,7 +71,7 @@ class FetchExchangeRates:
                     continue  # Don't fetch future dates
 
                 # Check if rates already exist for this month
-                if len(self.exchange_rates) > 0 and all(
+                if len(self.exchange_rates) > 0 and any(
                     month_date in rates for rates in self.exchange_rates.values()
                 ):
                     continue  # Already have rates for this month

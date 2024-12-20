@@ -7,7 +7,14 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    Flowable,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
 from .model import CapitalGainsReport
 from .util import round_decimal, strip_zeros
@@ -91,7 +98,7 @@ def render_calculations(
         )
     )
 
-    story = []
+    story: list[Flowable] = []
 
     # Title
     title = (
