@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
-from cgt_calc.parsers.base import Column, CsvParser
+from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
 
 if TYPE_CHECKING:
@@ -72,11 +72,19 @@ class Trading212Column(Column):
         self._dc = f"{self.csv_name} (GBP)"
         self.is_optional = is_optional
 
-    def is_present(self, headers: list[str]) -> bool:
+    def is_present(self, headers: set[str]) -> bool:
         if self.csv_name in headers and self._ac in headers:
             return True
 
         return self._dc in headers or self.is_optional
+
+    def remove_from(self, headers: list[str] | set[str]) -> None:
+        if self.csv_name in headers:
+            headers.remove(self.csv_name)
+        if self._ac in headers:
+            headers.remove(self._ac)
+        if self._dc in headers:
+            headers.remove(self._dc)
 
     def parse(self, row: dict[str, str]) -> dict[str, ParsedFieldType]:
         if self.csv_name in row and self._ac in row:
@@ -102,8 +110,10 @@ class Trading212Column(Column):
         raise ValueError(f"No column for {self.csv_name} found in {row}")
 
 
-class Trading212Parser(CsvParser):
+class Trading212Parser(CsvTransactionParser):
     """Parser for Trading 212 transactions."""
+
+    broker_source: BrokerSource = BrokerSource.TRADING_212
 
     def required_columns(self) -> list[Column]:
         return [
@@ -187,7 +197,7 @@ class Trading212Parser(CsvParser):
             fees=fees,
             amount=amount,
             currency=currency,
-            broker_source=BrokerSource.TRADING_212,
+            broker_source=self.broker_source,
         )
 
     def _calculate_fees(self, row: dict[str, ParsedFieldType]) -> Decimal:

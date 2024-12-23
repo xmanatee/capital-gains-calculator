@@ -6,7 +6,7 @@ import csv
 from pathlib import Path
 from typing import Any
 
-from cgt_calc.exceptions import ParsingError
+from cgt_calc.model import BrokerSource
 from cgt_calc.parsers.field_parsers import ParsedFieldType
 
 ParsedRowType = Any  # type: ignore[misc]
@@ -17,8 +17,11 @@ class Column:
         self.csv_name = csv_name
         self.parser = parser
 
-    def is_present(self, headers: list[str]) -> bool:
+    def is_present(self, headers: set[str]) -> bool:
         return self.csv_name in headers
+
+    def remove_from(self, headers: set[str]) -> None:
+        headers.remove(self.csv_name)
 
     def parse(self, row: dict[str, str]) -> dict[str, ParsedFieldType]:
         return {self.csv_name: self.parser(row[self.csv_name])}
@@ -35,25 +38,29 @@ class CsvParser(ABC):
     ) -> ParsedRowType:
         pass
 
-    def can_parse(self, file: Path) -> bool:
+    def check_columns(self, file: Path) -> tuple[list[str], list[str]]:
         with file.open(encoding="utf-8") as csv_file:
             reader = csv.reader(csv_file)
-            headers = next(reader)
+            headers = set(next(reader))
+
+            unexpected = headers.copy()
+            missing = set()
             for col in self.required_columns():
                 if not col.is_present(headers):
-                    return False
-        return True
+                    missing.add(col.csv_name)
+                else:
+                    col.remove_from(unexpected)
+            return list(unexpected), list(missing)
+
+    def can_parse(self, file: Path) -> bool:
+        _, missing = self.check_columns(file)
+        return not missing
 
     def parse_file(self, file: Path) -> list[ParsedRowType]:
         transactions = []
         with file.open(encoding="utf-8") as csv_file:
             reader = csv.reader(csv_file)
             headers = next(reader)
-            for col in self.required_columns():
-                if not col.is_present(headers):
-                    raise ParsingError(
-                        str(file), f"Missing required column: {col.csv_name}"
-                    )
             for row_values in reader:
                 if not any(row_values):
                     continue
@@ -64,3 +71,7 @@ class CsvParser(ABC):
                 transaction = self.parse_row(parsed_row, row)
                 transactions.append(transaction)
         return transactions
+
+
+class CsvTransactionParser(CsvParser):
+    broker_source: BrokerSource = BrokerSource.UNKNOWN

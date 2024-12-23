@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.exceptions import InvalidTransactionError, ParsingError
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
-from cgt_calc.parsers.base import Column, CsvParser
+from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
 
 if TYPE_CHECKING:
@@ -35,8 +35,10 @@ SHARESIGHT_TRADE_COLUMNS = [
 ]
 
 
-class SharesightTradesParser(CsvParser):
+class SharesightTradesParser(CsvTransactionParser):
     """Parser for Sharesight All Trades Report."""
+
+    broker_source: BrokerSource = BrokerSource.SHARESIGHT
 
     def required_columns(self) -> list[Column]:
         return SHARESIGHT_TRADE_COLUMNS
@@ -84,7 +86,7 @@ class SharesightTradesParser(CsvParser):
             fees=fees,
             amount=amount,
             currency=currency,
-            broker_source=BrokerSource.SHARESIGHT,
+            broker_source=self.broker_source,
         )
 
         # Sharesight has no native support for stock activity, so use a string
@@ -124,8 +126,10 @@ class SharesightTradesParser(CsvParser):
         return transactions
 
 
-class SharesightIncomeParser(CsvParser):
+class SharesightIncomeParser(CsvTransactionParser):
     """Parser for Sharesight Taxable Income Report."""
+
+    broker_source: BrokerSource = BrokerSource.SHARESIGHT
 
     def required_columns(self) -> list[Column]:
         # Columns vary between sections; we'll handle them dynamically
@@ -196,7 +200,7 @@ class SharesightIncomeParser(CsvParser):
                     action=ActionType.DIVIDEND,
                     symbol=symbol,
                     description=description,
-                    broker_source=BrokerSource.SHARESIGHT,
+                    broker_source=self.broker_source,
                     currency=currency,
                     amount=amount,
                     quantity=None,
@@ -212,7 +216,7 @@ class SharesightIncomeParser(CsvParser):
                         action=ActionType.TAX,
                         symbol=symbol,
                         description=description,
-                        broker_source=BrokerSource.SHARESIGHT,
+                        broker_source=self.broker_source,
                         currency=currency,
                         amount=-tax,
                         quantity=None,

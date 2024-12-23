@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
-from cgt_calc.parsers.base import Column, CsvParser
+from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
 
 if TYPE_CHECKING:
@@ -23,8 +23,10 @@ RAW_CSV_COLUMNS: Final[list[Column]] = [
 ]
 
 
-class RawParser(CsvParser):
+class RawParser(CsvTransactionParser):
     """Parser for Raw transactions."""
+
+    broker_source: BrokerSource = BrokerSource.RAW
 
     def required_columns(self) -> list[Column]:
         return RAW_CSV_COLUMNS
@@ -54,7 +56,7 @@ class RawParser(CsvParser):
             fees=fees,
             amount=amount,
             currency=row["currency"],
-            broker_source=BrokerSource.UNKNOWN,
+            broker_source=self.broker_source,
         )
 
 

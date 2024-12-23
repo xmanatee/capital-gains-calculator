@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import dataclass, field
 import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,7 +11,7 @@ from typing import TYPE_CHECKING, Final
 
 from cgt_calc.exceptions import ParsingError
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
-from cgt_calc.parsers.base import Column, CsvParser
+from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
 
 if TYPE_CHECKING:
@@ -73,7 +74,7 @@ def parse_schwab_action(label: str) -> ActionType:
     if label in {"Cash Merger", "Cash Merger Adj"}:
         return ActionType.CASH_MERGER
 
-    print(f"Unrecognized action in 'Schwab Transactions': {label}")
+    print(f"WARNING: Unrecognized action in 'Schwab Transactions': {label}")
     return ActionType.UNKNOWN
 
 
@@ -84,32 +85,13 @@ def parse_schwab_date(date_str: str) -> datetime.date:
     return datetime.datetime.strptime(date_str, "%m/%d/%Y").date()
 
 
+@dataclass
 class SchwabTransaction(BrokerTransaction):
-    def __init__(
-        self,
-        date: datetime.date,
-        action: ActionType,
-        symbol: str | None,
-        description: str,
-        quantity: Decimal | None,
-        price: Decimal | None,
-        fees: Decimal,
-        amount: Decimal | None,
-        raw_action: str,
-    ):
-        super().__init__(
-            date=date,
-            action=action,
-            symbol=symbol,
-            description=description,
-            quantity=quantity,
-            price=price,
-            fees=fees,
-            amount=amount,
-            currency="USD",
-            broker_source=BrokerSource.SCHWAB_INDIVIDUAL,
-        )
-        self.raw_action = raw_action
+    currency: str = field(init=False, default="USD")
+    broker_source: BrokerSource = field(
+        init=False, default=BrokerSource.SCHWAB_INDIVIDUAL
+    )
+    raw_action: str = field(compare=False)
 
 
 SCHWAB_CSV_COLUMNS: Final[list[Column]] = [
@@ -124,8 +106,10 @@ SCHWAB_CSV_COLUMNS: Final[list[Column]] = [
 ]
 
 
-class SchwabParser(CsvParser):
+class SchwabParser(CsvTransactionParser):
     """Parser for Charles Schwab transactions."""
+
+    broker_source: BrokerSource = BrokerSource.SCHWAB_INDIVIDUAL
 
     def required_columns(self) -> list[Column]:
         return SCHWAB_CSV_COLUMNS
@@ -133,21 +117,20 @@ class SchwabParser(CsvParser):
     def parse_row(
         self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
     ) -> SchwabTransaction:
-        description = row["Description"] or ""
-        raw_action = raw_row["Action"]
-        if row["Action"] == ActionType.UNKNOWN:
-            description = f"Unknown action: {raw_action}\n{description}"
-        return SchwabTransaction(
+        transaction = SchwabTransaction(
             date=row["Date"],
             action=row["Action"],
             symbol=row["Symbol"],
-            description=description,
+            description=row["Description"] or "",
             quantity=row["Quantity"],
             price=row["Price"],
             fees=row["Fees & Comm"] or Decimal(0),
             amount=row["Amount"],
-            raw_action=raw_action,
+            raw_action=raw_row["Action"],
         )
+        if row["Action"] == ActionType.UNKNOWN:
+            transaction.metadata["raw_action"] = raw_row["Action"]
+        return transaction
 
     def parse_file(self, file: Path) -> list[BrokerTransaction]:
         transactions = super().parse_file(file)

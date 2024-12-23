@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import datetime
 from decimal import Decimal
 from enum import Enum
+from functools import total_ordering
 
 from .util import round_decimal
 
@@ -59,6 +60,7 @@ class Broker(Enum):
 
 class BrokerSource(Enum):
     UNKNOWN = ("Unknown Source", Broker.UNKNOWN)
+    RAW = ("Raw", Broker.UNKNOWN)
     SCHWAB_INDIVIDUAL = ("Schwab Individual", Broker.SCHWAB)
     SCHWAB_AWARDS = ("Schwab Awards", Broker.SCHWAB)
     MSSB_RELEASE = ("Morgan Stanley Release", Broker.MSSB)
@@ -71,6 +73,7 @@ class BrokerSource(Enum):
         self.broker = broker
 
 
+@total_ordering
 class ActionType(Enum):
     """Type of transaction action."""
 
@@ -92,6 +95,9 @@ class ActionType(Enum):
     STOCK_SPLIT = 15
     CASH_MERGER = 16
 
+    def __lt__(self, other: ActionType) -> bool:
+        return self.value < other.value
+
 
 @dataclass
 class BrokerTransaction:
@@ -107,6 +113,7 @@ class BrokerTransaction:
     amount: Decimal | None
     currency: str
     broker_source: BrokerSource
+    metadata: dict[str, str] = field(default_factory=dict, init=False)
 
 
 class RuleType(Enum):

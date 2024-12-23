@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Final
 
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
-from cgt_calc.parsers.base import Column, CsvParser
+from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
 
 if TYPE_CHECKING:
@@ -35,7 +35,9 @@ STOCK_SPLIT_INFO = [
 ]
 
 
-class MorganStanleyReleaseParser(CsvParser):
+class MorganStanleyReleaseParser(CsvTransactionParser):
+    broker_source: BrokerSource = BrokerSource.MSSB_RELEASE
+
     def required_columns(self) -> list[Column]:
         return [
             Column("Vest Date", parse.date_format("%d-%b-%Y")),
@@ -69,11 +71,13 @@ class MorganStanleyReleaseParser(CsvParser):
             fees=Decimal(0),
             amount=amount,
             currency="USD",
-            broker_source=BrokerSource.MSSB_RELEASE,
+            broker_source=self.broker_source,
         )
 
 
-class MorganStanleyWithdrawalParser(CsvParser):
+class MorganStanleyWithdrawalParser(CsvTransactionParser):
+    broker_source: BrokerSource = BrokerSource.MSSB_WITHDRAWAL
+
     def required_columns(self) -> list[Column]:
         return [
             Column("Execution Date", parse.date_format("%d-%b-%Y")),
@@ -113,7 +117,7 @@ class MorganStanleyWithdrawalParser(CsvParser):
             fees=fees,
             amount=amount,
             currency="USD",
-            broker_source=BrokerSource.MSSB_WITHDRAWAL,
+            broker_source=self.broker_source,
         )
 
         return self._handle_stock_split(transaction)
