@@ -9,7 +9,7 @@ from typing import Any, Final
 
 from cgt_calc.const import TICKER_RENAMES
 from cgt_calc.exceptions import ParsingError
-from cgt_calc.model import BrokerSource, BrokerTransaction
+from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 import cgt_calc.parsers.field_parsers as parse
 from cgt_calc.parsers.schwab import parse_schwab_action
 from cgt_calc.util import round_decimal
@@ -105,7 +105,6 @@ def _is_integer(number: Decimal) -> bool:
 class SchwabAwardsTransaction(BrokerTransaction):
     currency: str = field(init=False, default="USD")
     broker_source: BrokerSource = field(init=False, default=BrokerSource.SCHWAB_AWARDS)
-    raw_action: str = field(compare=False)
 
 
 def build_transaction(
@@ -227,8 +226,9 @@ def build_transaction(
         price,
         fees,
         amount,
-        raw_action=raw_action,
     )
+    if action == ActionType.UNKNOWN:
+        transaction.metadata["raw_action"] = raw_action
 
     # Ensure past transactions are normalized to split values.
 

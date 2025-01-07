@@ -39,6 +39,7 @@ def parse_schwab_action(label: str) -> ActionType:
     if label in {"Stock Plan Activity", "Deposit"}:
         return ActionType.STOCK_ACTIVITY
     if label in [
+        "Dividend",
         "Qualified Dividend",
         "Cash Dividend",
         "Div Adjustment",
