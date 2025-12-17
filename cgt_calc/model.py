@@ -53,6 +53,7 @@ class Broker(Enum):
     MSSB = "Morgan Stanley"
     SHARESIGHT = "Sharesight"
     TRADING_212 = "Trading 212"
+    VANGUARD = "Vanguard"
 
     def __init__(self, readable_name: str):
         self.readable_name = readable_name
@@ -67,6 +68,7 @@ class BrokerSource(Enum):
     MSSB_WITHDRAWAL = ("Morgan Stanley Withdrawal", Broker.MSSB)
     SHARESIGHT = ("Sharesight", Broker.SHARESIGHT)
     TRADING_212 = ("Trading 212", Broker.TRADING_212)
+    VANGUARD = ("Vanguard", Broker.VANGUARD)
 
     def __init__(self, readable_name: str, broker: Broker):
         self.readable_name = readable_name

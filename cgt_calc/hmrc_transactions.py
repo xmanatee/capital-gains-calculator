@@ -46,9 +46,9 @@ def get_amount_or_fail(transaction: BrokerTransaction) -> Decimal:
 
 
 # It is not clear how Schwab or other brokers round the dollar value,
-# so assume the values are equal if they are within $0.01.
+# so assume the values are equal if they are within $0.10.
 def _approx_equal(val_a: Decimal, val_b: Decimal) -> bool:
-    return abs(val_a - val_b) < Decimal("0.01")
+    return abs(val_a - val_b) < Decimal("0.10")
 
 
 class HmrcTransactions:

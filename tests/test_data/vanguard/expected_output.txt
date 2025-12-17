@@ -1,0 +1,31 @@
+INFO: No schwab file provided
+INFO: No schwab Equity Award JSON file provided
+INFO: No trading212 folder provided
+INFO: No mssb folder provided
+INFO: No sharesight file provided
+INFO: No raw file provided
+First pass completed
+Final portfolio:
+  FOO: 5.00
+Final balance:
+  Vanguard: 600.00 (GBP)
+Dividends: £0.00
+Dividend taxes: £0.00
+Interest: £0.00
+Disposal proceeds: £600.00
+
+
+Second pass completed
+Portfolio at the end of 2022/2023 tax year:
+  FOO: 5.00, £500.00
+For tax year 2022/2023:
+Number of disposals: 1
+Disposal proceeds: £600.00
+Allowable costs: £500.00
+Capital gain: £100.00
+Capital loss: £0.00
+Total capital gain: £100.00
+Taxable capital gain: £0
+
+Generate calculations report
+All done!

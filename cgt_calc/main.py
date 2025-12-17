@@ -49,6 +49,7 @@ def main() -> int:
         args.mssb,
         args.sharesight,
         args.raw,
+        args.vanguard,
     )
     converter = CurrencyConverter(["USD", "AUD", "RUB", "CNY", "INR"])
     initial_prices = InitialPrices(read_initial_prices(args.initial_prices))

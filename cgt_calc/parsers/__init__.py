@@ -17,6 +17,7 @@ from cgt_calc.parsers.schwab_equity_award_json import (
 )
 from cgt_calc.parsers.sharesight import read_sharesight_transactions
 from cgt_calc.parsers.trading212 import read_trading212_transactions
+from cgt_calc.parsers.vanguard import read_vanguard_transactions
 from cgt_calc.resources import RESOURCES_PACKAGE
 
 if TYPE_CHECKING:
@@ -34,6 +35,7 @@ def read_broker_transactions(
     mssb_transactions_folder: str | None,
     sharesight_transactions_folder: str | None,
     raw_transactions_file: str | None,
+    vanguard_transactions_file: str | None,
 ) -> list[BrokerTransaction]:
     """Read transactions for all brokers."""
     transactions = []
@@ -70,6 +72,9 @@ def read_broker_transactions(
         transactions += read_raw_transactions(raw_transactions_file)
     else:
         print("INFO: No raw file provided")
+
+    if vanguard_transactions_file is not None:
+        transactions += read_vanguard_transactions(vanguard_transactions_file)
 
     transactions.sort(key=lambda k: k.date)
     return transactions
