@@ -105,3 +105,11 @@ class ExchangeRateMissingError(CalculationError):
         """Initialise."""
         self.message = f"No GBP/{symbol} price for {date}"
         super().__init__(self.message)
+
+
+class ExternalApiError(Exception):
+    """External API error."""
+
+
+class IsinTranslationError(Exception):
+    """ISIN translation error."""

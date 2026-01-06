@@ -54,6 +54,7 @@ class Broker(Enum):
     SHARESIGHT = "Sharesight"
     TRADING_212 = "Trading 212"
     VANGUARD = "Vanguard"
+    ERI = "Excess Reported Income"
 
     def __init__(self, readable_name: str):
         self.readable_name = readable_name
@@ -69,6 +70,7 @@ class BrokerSource(Enum):
     SHARESIGHT = ("Sharesight", Broker.SHARESIGHT)
     TRADING_212 = ("Trading 212", Broker.TRADING_212)
     VANGUARD = ("Vanguard", Broker.VANGUARD)
+    ERI = ("Excess Reported Income", Broker.ERI)
 
     def __init__(self, readable_name: str, broker: Broker):
         self.readable_name = readable_name
@@ -96,6 +98,7 @@ class ActionType(Enum):
     WIRE_FUNDS_RECEIVED = 14
     STOCK_SPLIT = 15
     CASH_MERGER = 16
+    EXCESS_REPORTED_INCOME = 17
 
     def __lt__(self, other: ActionType) -> bool:
         return self.value < other.value

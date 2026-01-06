@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cgt_calc.const import DEFAULT_INITIAL_PRICES_FILE
+from cgt_calc.parsers.eri import read_eri_transactions
 from cgt_calc.parsers.initial_prices import InitialPricesParser
 from cgt_calc.parsers.mssb import read_mssb_transactions
 from cgt_calc.parsers.raw import read_raw_transactions
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
     from datetime import date
     from decimal import Decimal
 
+    from cgt_calc.isin_converter import IsinConverter
     from cgt_calc.model import BrokerTransaction
 
 
@@ -36,9 +38,11 @@ def read_broker_transactions(
     sharesight_transactions_folder: str | None,
     raw_transactions_file: str | None,
     vanguard_transactions_file: str | None,
+    eri_transactions_file: str | None = None,
+    isin_converter: IsinConverter | None = None,
 ) -> list[BrokerTransaction]:
     """Read transactions for all brokers."""
-    transactions = []
+    transactions: list[BrokerTransaction] = []
     if schwab_transactions_file is not None:
         transactions += read_schwab_transactions(
             schwab_transactions_file, schwab_awards_transactions_file
@@ -75,6 +79,11 @@ def read_broker_transactions(
 
     if vanguard_transactions_file is not None:
         transactions += read_vanguard_transactions(vanguard_transactions_file)
+
+    if eri_transactions_file is not None and isin_converter is not None:
+        transactions += read_eri_transactions(
+            isin_converter, Path(eri_transactions_file)
+        )
 
     transactions.sort(key=lambda k: k.date)
     return transactions

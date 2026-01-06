@@ -11,6 +11,7 @@ import sys
 
 from cgt_calc.calculator import CapitalGainsCalculator
 from cgt_calc.hmrc_transactions import HmrcTransactions
+from cgt_calc.isin_converter import IsinConverter
 
 from . import render_latex
 from .args_parser import create_parser
@@ -41,6 +42,7 @@ def main() -> int:
     logging.basicConfig(level=default_logging_level)
 
     # Read data from input files
+    isin_converter = IsinConverter()
     broker_transactions = read_broker_transactions(
         args.schwab,
         args.schwab_award,
@@ -50,6 +52,8 @@ def main() -> int:
         args.sharesight,
         args.raw,
         args.vanguard,
+        args.eri,
+        isin_converter,
     )
     converter = CurrencyConverter(["USD", "AUD", "RUB", "CNY", "INR"])
     initial_prices = InitialPrices(read_initial_prices(args.initial_prices))

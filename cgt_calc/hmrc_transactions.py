@@ -330,6 +330,24 @@ class HmrcTransactions:
             elif transaction.action is ActionType.WIRE_FUNDS_RECEIVED:
                 amount = get_amount_or_fail(transaction)
                 new_balance += amount
+            elif transaction.action is ActionType.EXCESS_REPORTED_INCOME:
+                # ERI increases the acquisition cost basis to avoid double taxation
+                # when the holding is eventually sold. The ERI amount has already been
+                # taxed as income, so we add it to the cost basis.
+                if transaction.symbol is None:
+                    raise SymbolMissingError(transaction)
+                if transaction.price is None:
+                    raise PriceMissingError(transaction)
+                eri_amount = transaction.price
+                gbp_amount = self.converter.to_gbp_for(eri_amount, transaction)
+                add_to_list(
+                    self.acquisition_list,
+                    transaction.date,
+                    transaction.symbol,
+                    Decimal(0),  # No quantity change
+                    gbp_amount,
+                    Decimal(0),  # No fees
+                )
             elif transaction.action is ActionType.REINVEST_DIVIDENDS:
                 print(f"WARNING: Ignoring unsupported action: {transaction.action}")
             else:

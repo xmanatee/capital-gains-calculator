@@ -80,6 +80,12 @@ def create_parser() -> argparse.ArgumentParser:
         nargs="?",
         help="file containing the exported transactions from Vanguard in CSV format",
     )
+    parser.add_argument(
+        "--eri",
+        type=str,
+        nargs="?",
+        help="file containing Excess Reported Income data for offshore funds",
+    )
 
     parser.add_argument(
         "--exchange-rates-file",

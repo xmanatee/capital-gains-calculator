@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import datetime
+import os
 from typing import Final
+
+CGT_TEST_MODE = os.environ.get("CGT_TEST_MODE", "0") == "1"
 
 # Allowances from
 # https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances#tax-free-allowances-for-capital-gains-tax
@@ -46,3 +49,9 @@ BED_AND_BREAKFAST_DAYS: Final = 30
 TICKER_RENAMES: Final[dict[str, str]] = {
     "FB": "META",
 }
+
+# ISIN translation
+INITIAL_ISIN_TRANSLATION_RESOURCE: Final = "initial_isin_translation.csv"
+
+# Excess Reported Income (ERI) for offshore funds
+ERI_RESOURCE_FOLDER: Final = "eri"
