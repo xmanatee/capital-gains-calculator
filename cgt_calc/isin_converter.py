@@ -94,26 +94,25 @@ class IsinConverter:
 
     def add_from_transaction(self, transaction: BrokerTransaction) -> None:
         """Add the ISIN to symbol mapping from an existing transaction."""
-        if transaction.symbol and transaction.isin:
-            if not is_isin(transaction.isin):
+        isin = transaction.metadata.get("isin")
+        if transaction.symbol and isin:
+            if not is_isin(isin):
                 raise InvalidTransactionError(
                     transaction,
-                    f"Transaction uses invalid ISIN {transaction.isin}",
+                    f"Transaction uses invalid ISIN {isin}",
                 )
-            current_symbols = self.data.get(transaction.isin)
+            current_symbols = self.data.get(isin)
             if current_symbols and transaction.symbol not in current_symbols:
                 linked = ", ".join(sorted(current_symbols))
                 raise InvalidTransactionError(
                     transaction,
                     f"Ticker {transaction.symbol} does not match existing mapping: "
-                    f"ISIN {transaction.isin} is linked to {linked}",
+                    f"ISIN {isin} is linked to {linked}",
                 )
 
-            if transaction.symbol not in self.data.get(transaction.isin, set()):
-                self.data.setdefault(transaction.isin, set()).add(transaction.symbol)
-                self.write_data.setdefault(transaction.isin, set()).add(
-                    transaction.symbol
-                )
+            if transaction.symbol not in self.data.get(isin, set()):
+                self.data.setdefault(isin, set()).add(transaction.symbol)
+                self.write_data.setdefault(isin, set()).add(transaction.symbol)
                 self._write_isin_translation_file()
 
     def get_symbols(self, isin: str) -> set[str]:
