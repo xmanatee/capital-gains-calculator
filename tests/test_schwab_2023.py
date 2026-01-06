@@ -28,4 +28,3 @@ def test_run_with_schwab_2023_rounding_file() -> None:
         "if you changed output update the test with:\n"
         f"{cmd_str} > {expected_file}"
     )
-

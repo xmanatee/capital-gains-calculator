@@ -157,15 +157,11 @@ class Trading212Parser(CsvTransactionParser):
                 parse.optional(parse.decimal, Decimal(0)),
                 is_optional=True,
             ),
-            # Trading212Column("Charge amount"),
         ]
 
     def parse_row(
         self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
     ) -> BrokerTransaction:
-        # isin = row["ISIN"]
-        # transaction_id = row.get("ID")
-
         date = row["Time"].date()
         action = row["Action"]
         symbol = row["Ticker"]
@@ -217,29 +213,6 @@ class Trading212Parser(CsvTransactionParser):
                 )
             fees += row[fee_column]
         return fees
-
-    def _maybe_check_price_discrepancy(
-        self, price: Decimal | None, row: dict[str, ParsedFieldType]
-    ) -> None:
-        if price is None or row["Price / share"] is None:
-            return
-
-        if row["Currency (Price / share)"] == "GBP":
-            calculated_price_foreign = price
-        elif row["Exchange rate"] is not None:
-            calculated_price_foreign = price * row["Exchange rate"]
-        else:
-            return
-
-        discrepancy = row["Price / share"] - calculated_price_foreign
-        if abs(discrepancy) > Decimal("0.015"):
-            print(
-                "WARNING: The Price / share for this transaction "
-                "after converting and adding in the fees "
-                f"doesn't add up to the total amount: {row}. "
-                "You may fix the csv by looking at the transaction "
-                f"in the UI. Discrepancy / share: {discrepancy:.3f}."
-            )
 
 
 def read_trading212_transactions(transactions_folder: str) -> list[BrokerTransaction]:
