@@ -93,14 +93,6 @@ You will need several input files:
 
 - CSV file with initial stock prices in USD at the moment of vesting, split, etc.
   [`initial_prices.csv`](https://github.com/xmanatee/capital-gains-calculator/blob/main/cgt_calc/resources/initial_prices.csv) comes pre-packaged, you need to use the same format.
-- (Optional) Monthly exchange rates prices from [gov.uk](https://www.gov.uk/government/collections/exchange-rates-for-customs-and-vat).
-  `exchange_rates.csv` gets generated automatically using HMRC API, you need to use the same format if you want to override it.
-
-Fetch exchange rates form HMRC APIs:
-
-```shell
-poetry run fetch-exchange-rates
-```
 
 Then run (you can omit the brokers you don't use):
 
@@ -109,6 +101,28 @@ cgt-calc --year 2020 --schwab schwab_transactions.csv --trading212 trading212/ -
 ```
 
 See `cgt-calc --help` for the full list of settings.
+
+## Exchange Rates
+
+This calculator uses **official HMRC monthly exchange rates** from [gov.uk](https://www.trade-tariff.service.gov.uk/exchange_rates/monthly). These rates are published on the penultimate Thursday of each month and represent spot rates as of midday the day before publication.
+
+### HMRC Compliance
+
+Per [HMRC CG78310](https://www.gov.uk/hmrc-internal-manuals/capital-gains-manual/cg78310), HMRC does not prescribe a specific exchange rate but expects a "reasonable and consistent method" to be used. Using HMRC's published monthly rates satisfies this requirement.
+
+### How It Works
+
+- Foreign currency amounts are converted to GBP using the rate for the **month** of the transaction
+- Rates are fetched from the HMRC Trade Tariff API
+- The formula used is: `GBP = foreign_amount / rate` (HMRC rates are expressed as "1 GBP = X foreign currency")
+
+### Updating Rates
+
+```shell
+poetry run fetch-exchange-rates
+```
+
+This downloads the last 10 years of monthly rates for 150+ currencies.
 
 ## Disclaimer
 

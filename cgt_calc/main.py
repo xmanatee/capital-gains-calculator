@@ -55,7 +55,7 @@ def main() -> int:
         args.eri,
         isin_converter,
     )
-    converter = CurrencyConverter(["USD", "AUD", "RUB", "CNY", "INR"])
+    converter = CurrencyConverter(["USD", "EUR", "AUD", "RUB", "CNY", "INR"])
     initial_prices = InitialPrices(read_initial_prices(args.initial_prices))
     price_fetcher = CurrentPriceFetcher(converter)
     spin_off_handler = SpinOffHandler(args.spin_offs_file)
