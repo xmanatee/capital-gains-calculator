@@ -35,13 +35,13 @@ types-requests = "^2.27.7"
 yfinance = "<=0.2.57"
 
 [tool.poetry.group.dev.dependencies]
-codespell = "^2.2.6"
-mypy = "^1.8"
+codespell = "^2.3.0"
+mypy = "^1.14.0"
 pandas-stubs = "^2.2"
-pre-commit = "^3.5.0"
-pylint = "^3.0.3"
-pytest = ">=7.4.4,<9.0.0"
-ruff = "^0.6.4"
+pre-commit = "^4.0.0"
+pylint = "^3.3.0"
+pytest = ">=8.0.0"
+ruff = "^0.8.0"
 types-defusedxml = "^0.7.0.20240218"
 types-reportlab = "^4.2.5"
 
@@ -318,7 +318,7 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.ruff]
-required-version = ">=0.6.0"
+required-version = ">=0.8.0"
 target-version = "py39"
 
 [tool.ruff.lint]
