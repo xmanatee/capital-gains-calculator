@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
+from cgt_calc.validation import check
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -88,7 +89,7 @@ class Trading212Column(Column):
 
     def parse(self, row: dict[str, str]) -> dict[str, ParsedFieldType]:
         if self.csv_name in row and self._ac in row:
-            assert self._dc not in row
+            check(self._dc not in row, "unexpected dividend currency column")
 
             return {
                 self.csv_name: self.parser(row[self.csv_name]),

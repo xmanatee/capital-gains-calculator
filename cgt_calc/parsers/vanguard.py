@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 from typing import Final
 
-from cgt_calc.exceptions import ParsingError, UnexpectedColumnCountError
+from cgt_calc.exceptions import ParsingError
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 
 COLUMNS: Final[list[str]] = [
@@ -42,7 +42,9 @@ class VanguardTransaction(BrokerTransaction):
     def __init__(self, header: list[str], row_raw: list[str], file: str):
         """Create transaction from CSV row."""
         if len(row_raw) != len(COLUMNS):
-            raise UnexpectedColumnCountError(row_raw, len(COLUMNS), file)
+            raise ParsingError(
+                file, f"expected {len(COLUMNS)} columns, got {len(row_raw)}"
+            )
 
         row = dict(zip(header, row_raw))
 

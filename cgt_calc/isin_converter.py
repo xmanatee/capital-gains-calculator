@@ -15,11 +15,10 @@ from requests_ratelimiter import LimiterSession
 from .const import CGT_TEST_MODE, INITIAL_ISIN_TRANSLATION_RESOURCE
 from .exceptions import (
     ExternalApiError,
-    InvalidTransactionError,
     IsinTranslationError,
     ParsingError,
-    UnexpectedColumnCountError,
 )
+from .validation import TransactionError
 from .resources import RESOURCES_PACKAGE
 from .util import is_isin, open_with_parents
 
@@ -43,7 +42,10 @@ class IsinTranslationEntry:
     def __init__(self, row: list[str], file: Path):
         """Create entry from CSV row."""
         if len(row) < ISIN_TRANSLATION_COLUMNS_NUM:
-            raise UnexpectedColumnCountError(row, ISIN_TRANSLATION_COLUMNS_NUM, file)
+            raise ParsingError(
+                str(file),
+                f"expected {ISIN_TRANSLATION_COLUMNS_NUM} columns, got {len(row)}",
+            )
         self.isin = row[0]
         if not is_isin(self.isin):
             raise ParsingError(file, f"Row contains invalid ISIN '{self.isin}'")
@@ -97,16 +99,16 @@ class IsinConverter:
         isin = transaction.metadata.get("isin")
         if transaction.symbol and isin:
             if not is_isin(isin):
-                raise InvalidTransactionError(
+                raise TransactionError(
                     transaction,
-                    f"Transaction uses invalid ISIN {isin}",
+                    f"invalid ISIN: {isin}",
                 )
             current_symbols = self.data.get(isin)
             if current_symbols and transaction.symbol not in current_symbols:
                 linked = ", ".join(sorted(current_symbols))
-                raise InvalidTransactionError(
+                raise TransactionError(
                     transaction,
-                    f"Ticker {transaction.symbol} does not match existing mapping: "
+                    f"ticker {transaction.symbol} does not match existing mapping: "
                     f"ISIN {isin} is linked to {linked}",
                 )
 

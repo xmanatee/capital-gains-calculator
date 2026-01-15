@@ -9,6 +9,7 @@ from enum import Enum
 from functools import total_ordering
 
 from .util import round_decimal
+from .validation import check, check_not_none
 
 
 @dataclass
@@ -146,11 +147,12 @@ class CalculationEntry:
     def __post_init__(self) -> None:
         if self.amount >= 0 and self.rule_type is not RuleType.SPIN_OFF:
             # Ensure gain is amount - allowable_cost if not explicitly set
-            # If gain is already set, assert it's consistent:
+            # If gain is already set, validate it's consistent:
             expected_gain = self.amount - self.allowable_cost
-            assert (
-                self.gain == expected_gain
-            ), f"gain ({self.gain}) != amount - allowable_cost ({expected_gain})"
+            check(
+                self.gain == expected_gain,
+                f"gain ({self.gain}) != amount - allowable_cost ({expected_gain})",
+            )
 
 
 CalculationLog = dict[datetime.date, dict[str, list[CalculationEntry]]]
@@ -251,8 +253,10 @@ class CapitalGainsReport:
 
     def taxable_gain(self) -> Decimal:
         """Taxable gain with current allowance."""
-        assert self.capital_gain_allowance is not None
-        return max(Decimal(0), self.total_gain() - self.capital_gain_allowance)
+        allowance = check_not_none(
+            self.capital_gain_allowance, "capital_gain_allowance"
+        )
+        return max(Decimal(0), self.total_gain() - allowance)
 
     def __repr__(self) -> str:
         """Return string representation."""

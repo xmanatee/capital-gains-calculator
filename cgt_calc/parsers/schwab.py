@@ -13,6 +13,7 @@ from cgt_calc.exceptions import ParsingError
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
+from cgt_calc.validation import check_not_none
 
 if TYPE_CHECKING:
     from cgt_calc.parsers.field_parsers import ParsedFieldType
@@ -179,8 +180,9 @@ class SchwabParser(CsvTransactionParser):
                     raise ParsingError(
                         "schwab", "Cash Merger Adj does not match previous transaction"
                     )
-                assert transaction.quantity is not None
-                prev_transaction.quantity = -transaction.quantity
+                prev_transaction.quantity = -check_not_none(
+                    transaction.quantity, "transaction.quantity"
+                )
                 prev_transaction.price = self._price(prev_transaction)
                 prev_transaction.fees += transaction.fees
                 print(

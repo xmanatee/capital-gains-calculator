@@ -6,15 +6,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from cgt_calc.dates import get_tax_year_end, get_tax_year_start, is_date
-from cgt_calc.exceptions import (
-    AmountMissingError,
-    CalculatedAmountDiscrepancyError,
-    CalculationError,
-    InvalidTransactionError,
-    PriceMissingError,
-    QuantityNotPositiveError,
-    SymbolMissingError,
-)
 from cgt_calc.model import (
     ActionType,
     Broker,
@@ -25,6 +16,12 @@ from cgt_calc.model import (
 )
 from cgt_calc.transaction_log import add_to_list
 from cgt_calc.util import round_decimal
+from cgt_calc.exceptions import CalculationError
+from cgt_calc.validation import (
+    check,
+    check_tx,
+    check_tx_field,
+)
 
 if TYPE_CHECKING:
     import datetime
@@ -39,10 +36,7 @@ LOGGER = logging.getLogger(__name__)
 
 def get_amount_or_fail(transaction: BrokerTransaction) -> Decimal:
     """Return the transaction amount or throw an error."""
-    amount = transaction.amount
-    if amount is None:
-        raise AmountMissingError(transaction)
-    return amount
+    return check_tx_field(transaction, transaction.amount, "amount")
 
 
 # It is not clear how Schwab or other brokers round the dollar value,
@@ -81,7 +75,7 @@ class HmrcTransactions:
 
     def _date_in_tax_year(self, date: datetime.date) -> bool:
         """Check if date is within current tax year."""
-        assert is_date(date)
+        check(is_date(date), f"invalid date: {date}")
         return self.tax_year_start_date <= date <= self.tax_year_end_date
 
     def _add_acquisition(
@@ -89,14 +83,10 @@ class HmrcTransactions:
         transaction: BrokerTransaction,
     ) -> None:
         """Add new acquisition to the given list."""
-        symbol = transaction.symbol
-        quantity = transaction.quantity
+        symbol = check_tx_field(transaction, transaction.symbol, "symbol")
+        quantity = check_tx_field(transaction, transaction.quantity, "quantity")
+        check_tx(transaction, quantity > 0, "quantity must be > 0")
         price = transaction.price
-
-        if symbol is None:
-            raise SymbolMissingError(transaction)
-        if quantity is None or quantity <= 0:
-            raise QuantityNotPositiveError(transaction)
 
         # Add to acquisition_list to apply same day rule
         if transaction.action is ActionType.STOCK_ACTIVITY:
@@ -109,13 +99,14 @@ class HmrcTransactions:
             price = Decimal(0)
             amount = Decimal(0)
         else:
-            if price is None:
-                raise PriceMissingError(transaction)
-
+            price = check_tx_field(transaction, price, "price")
             amount = get_amount_or_fail(transaction)
             calculated_amount = quantity * price + transaction.fees
-            if not _approx_equal(amount, -calculated_amount):
-                raise CalculatedAmountDiscrepancyError(transaction, -calculated_amount)
+            check_tx(
+                transaction,
+                _approx_equal(amount, -calculated_amount),
+                f"calculated amount ({-calculated_amount}) != supplied ({amount})",
+            )
             amount = -amount
 
         self.portfolio[symbol] += Position(quantity, amount)
@@ -188,10 +179,8 @@ class HmrcTransactions:
         period of the original MMM shares. This means the date you acquired the
         MMM shares will be used as the acquisition date for the SOLV shares.
         """
-        symbol = transaction.symbol
-        quantity = transaction.quantity
-        assert symbol is not None
-        assert quantity is not None
+        symbol = check_tx_field(transaction, transaction.symbol, "symbol")
+        quantity = check_tx_field(transaction, transaction.quantity, "quantity")
 
         ticker = self.spin_off_handler.get_spin_off_source(
             symbol, transaction.date, self.portfolio
@@ -220,36 +209,32 @@ class HmrcTransactions:
         transaction: BrokerTransaction,
     ) -> None:
         """Add new disposal to the given list."""
-        symbol = transaction.symbol
-        quantity = transaction.quantity
-        if symbol is None:
-            raise SymbolMissingError(transaction)
-        if symbol not in self.portfolio:
-            raise InvalidTransactionError(
-                transaction, "Tried to sell not owned symbol, reversed order?"
-            )
-        if quantity is None or quantity <= 0:
-            raise QuantityNotPositiveError(transaction)
-        if self.portfolio[symbol].quantity < quantity:
-            raise InvalidTransactionError(
-                transaction,
-                "Tried to sell more than the available "
-                f"balance({self.portfolio[symbol].quantity})",
-            )
+        symbol = check_tx_field(transaction, transaction.symbol, "symbol")
+        check_tx(
+            transaction, symbol in self.portfolio, "selling not owned symbol"
+        )
+        quantity = check_tx_field(transaction, transaction.quantity, "quantity")
+        check_tx(transaction, quantity > 0, "quantity must be > 0")
+        check_tx(
+            transaction,
+            self.portfolio[symbol].quantity >= quantity,
+            f"selling more than available ({self.portfolio[symbol].quantity})",
+        )
 
         amount = get_amount_or_fail(transaction)
-        price = transaction.price
+        price = check_tx_field(transaction, transaction.price, "price")
 
         self.portfolio[symbol] -= Position(quantity, amount)
 
         if self.portfolio[symbol].quantity == 0:
             del self.portfolio[symbol]
 
-        if price is None:
-            raise PriceMissingError(transaction)
         calculated_amount = quantity * price - transaction.fees
-        if not _approx_equal(amount, calculated_amount):
-            raise CalculatedAmountDiscrepancyError(transaction, calculated_amount)
+        check_tx(
+            transaction,
+            _approx_equal(amount, calculated_amount),
+            f"calculated amount ({calculated_amount}) != supplied ({amount})",
+        )
         add_to_list(
             self.disposal_list,
             transaction.date,
@@ -296,12 +281,11 @@ class HmrcTransactions:
                 transaction.fees = -amount
                 transaction.quantity = Decimal(0)
                 gbp_fees = self.converter.to_gbp_for(transaction.fees, transaction)
-                if transaction.symbol is None:
-                    raise SymbolMissingError(transaction)
+                symbol = check_tx_field(transaction, transaction.symbol, "symbol")
                 add_to_list(
                     self.acquisition_list,
                     transaction.date,
-                    transaction.symbol,
+                    symbol,
                     transaction.quantity,
                     gbp_fees,
                     gbp_fees,
@@ -334,16 +318,13 @@ class HmrcTransactions:
                 # ERI increases the acquisition cost basis to avoid double taxation
                 # when the holding is eventually sold. The ERI amount has already been
                 # taxed as income, so we add it to the cost basis.
-                if transaction.symbol is None:
-                    raise SymbolMissingError(transaction)
-                if transaction.price is None:
-                    raise PriceMissingError(transaction)
-                eri_amount = transaction.price
+                symbol = check_tx_field(transaction, transaction.symbol, "symbol")
+                eri_amount = check_tx_field(transaction, transaction.price, "price")
                 gbp_amount = self.converter.to_gbp_for(eri_amount, transaction)
                 add_to_list(
                     self.acquisition_list,
                     transaction.date,
-                    transaction.symbol,
+                    symbol,
                     Decimal(0),  # No quantity change
                     gbp_amount,
                     Decimal(0),  # No fees
@@ -351,9 +332,7 @@ class HmrcTransactions:
             elif transaction.action is ActionType.REINVEST_DIVIDENDS:
                 print(f"WARNING: Ignoring unsupported action: {transaction.action}")
             else:
-                raise InvalidTransactionError(
-                    transaction, f"Action not processed({transaction.action})"
-                )
+                check_tx(transaction, False, f"action not processed: {transaction.action}")
             balance_history.append(new_balance)
             if self.balance_check and new_balance < 0:
                 msg = (

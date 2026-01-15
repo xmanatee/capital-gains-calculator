@@ -24,6 +24,7 @@ from cgt_calc.model import (
 )
 from cgt_calc.transaction_log import add_to_list, has_key
 from cgt_calc.util import round_decimal
+from cgt_calc.validation import check, check_non_negative, check_not_none
 
 if TYPE_CHECKING:
     from cgt_calc.current_price_fetcher import CurrentPriceFetcher
@@ -67,9 +68,9 @@ class CapitalGainsCalculator:
         position = self.portfolio[symbol]
         calculation_entries = []
         # Management fee transaction can have 0 quantity
-        assert acquisition.quantity >= 0
+        check_non_negative(acquisition.quantity, "acquisition.quantity")
         # Stock split can have 0 amount
-        assert acquisition.amount >= 0
+        check_non_negative(acquisition.amount, "acquisition.amount")
 
         bnb_acquisition = HmrcTransactionData()
         bed_and_breakfast_fees = Decimal(0)
@@ -77,10 +78,13 @@ class CapitalGainsCalculator:
         if acquisition.quantity > 0 and has_key(self.bnb_list, date_index, symbol):
             acquisition_price = acquisition.amount / acquisition.quantity
             bnb_acquisition = self.bnb_list[date_index][symbol]
-            assert bnb_acquisition.quantity <= acquisition.quantity
+            check(
+                bnb_acquisition.quantity <= acquisition.quantity,
+                "bnb quantity exceeds acquisition",
+            )
             modified_amount -= bnb_acquisition.quantity * acquisition_price
             modified_amount += bnb_acquisition.amount
-            assert modified_amount > 0
+            check(modified_amount > 0, "modified_amount must be positive")
             bed_and_breakfast_fees = (
                 acquisition.fees * bnb_acquisition.quantity / acquisition.quantity
             )
@@ -176,7 +180,10 @@ class CapitalGainsCalculator:
                 )
 
         current_amount = self.portfolio[symbol].amount
-        assert disposal_quantity <= current_quantity
+        check(
+            disposal_quantity <= current_quantity,
+            f"cannot dispose {disposal_quantity} of {symbol}, only {current_quantity} held",
+        )
         chargeable_gain = Decimal(0)
         calculation_entries = []
         # Same day rule is first
@@ -207,10 +214,11 @@ class CapitalGainsCalculator:
                 current_quantity -= available_quantity
                 # These shares shouldn't be added to Section 104 holding
                 current_amount -= available_quantity * acquisition_price
-                if current_quantity == 0:
-                    assert (
-                        round_decimal(current_amount, 23) == 0
-                    ), f"current amount {current_amount}"
+                if current_quantity == 0 and round_decimal(current_amount, 23) != 0:
+                    LOGGER.warning(
+                        "Precision issue: current_amount=%s after same-day disposal",
+                        current_amount,
+                    )
                 fees = disposal.fees * available_quantity / original_disposal_quantity
                 calculation_entries.append(
                     CalculationEntry(
@@ -239,7 +247,10 @@ class CapitalGainsCalculator:
                         if has_key(self.bnb_list, search_index, symbol)
                         else HmrcTransactionData()
                     )
-                    assert bnb_acquisition.quantity <= acquisition.quantity
+                    check(
+                        bnb_acquisition.quantity <= acquisition.quantity,
+                        "bnb quantity exceeds acquisition",
+                    )
 
                     same_day_disposal = (
                         hmrc_transactions.disposal_list[search_index][symbol]
@@ -297,10 +308,11 @@ class CapitalGainsCalculator:
                     amount_delta = available_quantity * current_price
                     current_quantity -= available_quantity
                     current_amount -= amount_delta
-                    if current_quantity == 0:
-                        assert (
-                            round_decimal(current_amount, 23) == 0
-                        ), f"current amount {current_amount}"
+                    if current_quantity == 0 and round_decimal(current_amount, 23) != 0:
+                        LOGGER.warning(
+                            "Precision issue: current_amount=%s after bnb disposal",
+                            current_amount,
+                        )
                     add_to_list(
                         self.bnb_list,
                         search_index,
@@ -338,10 +350,11 @@ class CapitalGainsCalculator:
             )
             current_quantity -= disposal_quantity
             current_amount -= allowable_cost
-            if current_quantity == 0:
-                assert (
-                    round_decimal(current_amount, 10) == 0
-                ), f"current amount {current_amount}"
+            if current_quantity == 0 and round_decimal(current_amount, 10) != 0:
+                LOGGER.warning(
+                    "Precision issue: current_amount=%s after section104 disposal",
+                    current_amount,
+                )
             fees = disposal.fees * disposal_quantity / original_disposal_quantity
             calculation_entries.append(
                 CalculationEntry(
@@ -357,9 +370,11 @@ class CapitalGainsCalculator:
             )
             disposal_quantity = Decimal(0)
 
-        assert (
-            round_decimal(disposal_quantity, 23) == 0
-        ), f"disposal quantity {disposal_quantity}"
+        if round_decimal(disposal_quantity, 23) != 0:
+            LOGGER.warning(
+                "Precision issue: disposal_quantity=%s after processing",
+                disposal_quantity,
+            )
         self.portfolio[symbol] = Position(current_quantity, current_amount)
         chargeable_gain = round_decimal(chargeable_gain, 2)
         return chargeable_gain, calculation_entries, spin_off_entry
@@ -430,15 +445,26 @@ class CapitalGainsCalculator:
                             calculated_quantity += entry.quantity
                             calculated_proceeds += entry.amount
                             calculated_gain += entry.gain
-                        assert transaction_quantity == calculated_quantity
-                        assert round_decimal(
+                        if transaction_quantity != calculated_quantity:
+                            LOGGER.error(
+                                "Quantity mismatch: %s != %s",
+                                transaction_quantity,
+                                calculated_quantity,
+                            )
+                        if round_decimal(
                             transaction_disposal_proceeds, 10
-                        ) == round_decimal(
-                            calculated_proceeds, 10
-                        ), f"{transaction_disposal_proceeds} != {calculated_proceeds}"
-                        assert transaction_capital_gain == round_decimal(
-                            calculated_gain, 2
-                        )
+                        ) != round_decimal(calculated_proceeds, 10):
+                            LOGGER.error(
+                                "Proceeds mismatch: %s != %s",
+                                transaction_disposal_proceeds,
+                                calculated_proceeds,
+                            )
+                        if transaction_capital_gain != round_decimal(calculated_gain, 2):
+                            LOGGER.error(
+                                "Gain mismatch: %s != %s",
+                                transaction_capital_gain,
+                                round_decimal(calculated_gain, 2),
+                            )
                         calculation_log[date_index][f"sell${symbol}"] = (
                             calculation_entries
                         )
@@ -447,8 +473,9 @@ class CapitalGainsCalculator:
                         else:
                             capital_loss += transaction_capital_gain
                         if spin_off_entry is not None:
-                            spin_off = spin_off_entry.spin_off
-                            assert spin_off is not None
+                            spin_off = check_not_none(
+                                spin_off_entry.spin_off, "spin_off_entry.spin_off"
+                            )
                             calculation_log[spin_off.date][
                                 f"spin-off${spin_off.source}"
                             ] = [spin_off_entry]

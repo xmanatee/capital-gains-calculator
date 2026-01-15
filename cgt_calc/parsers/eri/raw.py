@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from cgt_calc.exceptions import ParsingError, UnexpectedColumnCountError
+from cgt_calc.exceptions import ParsingError
 from cgt_calc.util import is_isin
 
 from .model import EriTransaction
@@ -42,7 +42,9 @@ class EriRawData:
 def parse_eri_row(header: list[str], row_raw: list[str], file: Path) -> EriRawData:
     """Parse a single CSV row into ERI data."""
     if len(row_raw) != len(COLUMNS):
-        raise UnexpectedColumnCountError(row_raw, len(COLUMNS), file)
+        raise ParsingError(
+            str(file), f"expected {len(COLUMNS)} columns, got {len(row_raw)}"
+        )
 
     row = dict(zip(header, row_raw, strict=True))
 

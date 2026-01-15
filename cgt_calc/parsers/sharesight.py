@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cgt_calc.const import TICKER_RENAMES
-from cgt_calc.exceptions import InvalidTransactionError, ParsingError
+from cgt_calc.exceptions import ParsingError
+from cgt_calc.validation import check_tx
 from cgt_calc.model import ActionType, BrokerSource, BrokerTransaction
 from cgt_calc.parsers.base import Column, CsvTransactionParser
 import cgt_calc.parsers.field_parsers as parse
@@ -93,10 +94,7 @@ class SharesightTradesParser(CsvTransactionParser):
         # in the trade comment to mark it
         if STOCK_ACTIVITY_COMMENT_MARKER.lower() in description.lower():
             # Stock activity that is not a grant is weird and unsupported
-            if action != ActionType.BUY:
-                raise InvalidTransactionError(
-                    transaction, "Stock activity must have Type=Buy"
-                )
+            check_tx(transaction, action == ActionType.BUY, "stock activity must have Type=Buy")
             transaction.action = ActionType.STOCK_ACTIVITY
             transaction.amount = None
 
