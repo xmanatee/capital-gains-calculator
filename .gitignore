@@ -1,4 +1,3 @@
-exchange_rates/
 node_modules/
 *.aux
 *.log
@@ -9,5 +8,4 @@ __pycache__
 env
 dist
 calculations.pdf
-exchange_rates.csv
 spin_offs.csv
