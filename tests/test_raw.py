@@ -15,7 +15,7 @@ def test_run_with_raw_files_no_balance_check() -> None:
         "2022",
         "--raw",
         "tests/test_data/raw/test_data.csv",
-        "--no-pdflatex",
+        "--no-report",
         "--no-balance-check",
     ]
     result = subprocess.run(cmd, check=True, capture_output=True)

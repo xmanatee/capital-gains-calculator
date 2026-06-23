@@ -213,9 +213,6 @@ def build_transaction(
         date = datetime.datetime.strptime(row[names.date], "%m/%d/%Y").date()
         price = None
         print(f"WARNING: Parsing for action {row[names.action]} is not implemented!")
-        # raise ParsingError(
-        #     file, f"Parsing for action {row[names.action]} is not implemented!"
-        # )
 
     transaction = SchwabAwardsTransaction(
         date,

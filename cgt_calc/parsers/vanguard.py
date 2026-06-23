@@ -101,14 +101,8 @@ def _validate_header(header: list[str], filename: str) -> None:
 def read_vanguard_transactions(transactions_file: str) -> list[VanguardTransaction]:
     """Read Vanguard transactions from file."""
     file_path = Path(transactions_file)
-    try:
-        with file_path.open(encoding="utf-8") as csv_file:
-            lines = list(csv.reader(csv_file))
-    except FileNotFoundError:
-        print(
-            f"WARNING: Couldn't locate Vanguard transactions file({transactions_file})"
-        )
-        return []
+    with file_path.open(encoding="utf-8") as csv_file:
+        lines = list(csv.reader(csv_file))
 
     if not lines:
         print(f"WARNING: No transactions detected in file {transactions_file}")

@@ -30,13 +30,13 @@ class Column:
 class CsvParser(ABC):
     @abstractmethod
     def required_columns(self) -> list[Column]:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def parse_row(
         self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
     ) -> ParsedRowType:
-        pass
+        raise NotImplementedError
 
     def check_columns(self, file: Path) -> tuple[list[str], list[str]]:
         with file.open(encoding="utf-8") as csv_file:

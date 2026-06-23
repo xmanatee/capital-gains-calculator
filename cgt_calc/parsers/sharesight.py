@@ -140,7 +140,7 @@ class SharesightIncomeParser(CsvTransactionParser):
     def parse_row(
         self, row: dict[str, ParsedFieldType], raw_row: dict[str, str]
     ) -> ParsedRowType:
-        pass
+        raise NotImplementedError("Sharesight income rows are parsed by section")
 
     def parse_file(self, file: Path) -> list[BrokerTransaction]:
         transactions = []

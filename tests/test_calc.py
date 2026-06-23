@@ -139,7 +139,7 @@ def test_run_with_example_files() -> None:
         "tests/test_data/trading212/",
         "--mssb",
         "tests/test_data/mssb/",
-        "--no-pdflatex",
+        "--no-report",
     ]
     try:
         result = subprocess.run(cmd, check=True, capture_output=True)

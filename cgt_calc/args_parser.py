@@ -146,10 +146,4 @@ def create_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="print version",
     )
-    # For testing only
-    parser.add_argument(
-        "--no-pdflatex",
-        action="store_true",
-        help=argparse.SUPPRESS,
-    )
     return parser

@@ -68,13 +68,12 @@ class FetchExchangeRates:
             for month in range(1, 13):
                 month_date = datetime.date(year, month, 1)
                 if month_date > datetime.date.today():
-                    continue  # Don't fetch future dates
+                    continue
 
-                # Check if rates already exist for this month
                 if len(self.exchange_rates) > 0 and any(
                     month_date in rates for rates in self.exchange_rates.values()
                 ):
-                    continue  # Already have rates for this month
+                    continue
 
                 if year < self.NEW_ENDPOINT_FROM_YEAR:
                     month_str = month_date.strftime("%m%y")
@@ -84,11 +83,7 @@ class FetchExchangeRates:
                     url = self.HMRC_NEW_URL_TEMPLATE.format(month_str=month_str)
 
                 response = session.get(url, timeout=20)
-                # response.raise_for_status()
-                if response.status_code != requests.codes.OK:
-                    date_str = month_date.strftime("%Y-%m-%d")
-                    print(f"Failed fetching data for {date_str}")
-                    continue
+                response.raise_for_status()
                 tree = ET.fromstring(response.text)
                 rates = {
                     str(
@@ -102,7 +97,6 @@ class FetchExchangeRates:
                         self.exchange_rates[currency] = {}
                     self.exchange_rates[currency][month_date] = rate
 
-        # Save the fetched rates to files
         self._save_exchange_rates()
 
 

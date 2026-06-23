@@ -17,7 +17,7 @@ def test_run_with_schwab_2023_rounding_file() -> None:
         "2023",
         "--schwab",
         "tests/test_data/schwab/schwab_transactions-2023.csv",
-        "--no-pdflatex",
+        "--no-report",
     ]
     result = subprocess.run(cmd, check=True, capture_output=True)
     expected_file = Path("tests") / "test_data" / "schwab" / "expected_output.txt"

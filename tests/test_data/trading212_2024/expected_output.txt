@@ -43,5 +43,4 @@ Capital loss: £0.00
 Total capital gain: £757.15
 Taxable capital gain: £0
 
-Generate calculations report
 All done!

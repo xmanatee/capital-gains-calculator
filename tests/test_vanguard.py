@@ -17,7 +17,7 @@ def test_run_with_vanguard_files() -> None:
         "2022",
         "--vanguard",
         "tests/test_data/vanguard/report.csv",
-        "--no-pdflatex",
+        "--no-report",
     ]
     result = subprocess.run(cmd, check=True, capture_output=True)
     expected_file = Path("tests") / "test_data" / "vanguard" / "expected_output.txt"

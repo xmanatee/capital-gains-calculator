@@ -29,10 +29,6 @@ DEFAULT_REPORT_PATH: Final = "calculations.pdf"
 
 INTERNAL_START_DATE: Final = datetime.date(2010, 1, 1)
 
-# Resources
-
-PACKAGE_NAME = __package__
-
 # Monthly exchange rate history from HMRC
 DEFAULT_EXCHANGE_RATES_FILE: Final = "exchange_rates.csv"
 
@@ -40,9 +36,6 @@ DEFAULT_EXCHANGE_RATES_FILE: Final = "exchange_rates.csv"
 DEFAULT_INITIAL_PRICES_FILE: Final = "initial_prices.csv"
 
 DEFAULT_SPIN_OFF_FILE: Final = "spin_offs.csv"
-
-# Latex template for calculations report
-TEMPLATE_NAME: Final = "template.tex.j2"
 
 BED_AND_BREAKFAST_DAYS: Final = 30
 

@@ -13,7 +13,7 @@ from cgt_calc.calculator import CapitalGainsCalculator
 from cgt_calc.hmrc_transactions import HmrcTransactions
 from cgt_calc.isin_converter import IsinConverter
 
-from . import render_latex
+from . import render_pdf
 from .args_parser import create_parser
 from .currency_converter import CurrencyConverter
 from .current_price_fetcher import CurrentPriceFetcher
@@ -85,12 +85,11 @@ def main() -> int:
     report = calculator.calculate_capital_gain(hmrc_transactions)
     print(report)
 
-    # Generate PDF report.
     if not args.no_report:
-        render_latex.render_calculations(
+        print("Generate calculations report")
+        render_pdf.render_calculations(
             report,
             output_path=Path(args.report),
-            skip_pdflatex=args.no_pdflatex,
         )
     print("All done!")
 
