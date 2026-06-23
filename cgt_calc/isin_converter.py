@@ -13,17 +13,13 @@ import requests
 from requests_ratelimiter import LimiterSession
 
 from .const import CGT_TEST_MODE, INITIAL_ISIN_TRANSLATION_RESOURCE
-from .exceptions import (
-    ExternalApiError,
-    IsinTranslationError,
-    ParsingError,
-)
-from .validation import TransactionError
+from .exceptions import ExternalApiError, IsinTranslationError, ParsingError
 from .resources import RESOURCES_PACKAGE
 from .util import is_isin, open_with_parents
+from .validation import TransactionError
 
 if TYPE_CHECKING:
-    from importlib.resources.abc import Traversable
+    from importlib.abc import Traversable
 
     from .model import BrokerTransaction
 
@@ -39,7 +35,7 @@ class IsinTranslationEntry:
     isin: str
     symbols: set[str]
 
-    def __init__(self, row: list[str], file: Path):
+    def __init__(self, row: list[str], file: str):
         """Create entry from CSV row."""
         if len(row) < ISIN_TRANSLATION_COLUMNS_NUM:
             raise ParsingError(
@@ -48,7 +44,7 @@ class IsinTranslationEntry:
             )
         self.isin = row[0]
         if not is_isin(self.isin):
-            raise ParsingError(file, f"Row contains invalid ISIN '{self.isin}'")
+            raise ParsingError(str(file), f"Row contains invalid ISIN '{self.isin}'")
         self.symbols = set(row[1:])
 
     def __str__(self) -> str:
@@ -141,7 +137,9 @@ class IsinConverter:
         def load(source: Traversable | Path) -> dict[str, set[str]]:
             """Load ISIN translation data from a CSV source."""
             file_label = (
-                source if isinstance(source, Path) else Path("resources") / source.name
+                str(source)
+                if isinstance(source, Path)
+                else str(Path("resources") / source.name)
             )
             with source.open(encoding="utf-8") as csv_file:
                 lines = list(csv.reader(csv_file))

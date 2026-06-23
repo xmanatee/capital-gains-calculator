@@ -4,12 +4,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-# Re-export core exceptions from validation.py
-from cgt_calc.validation import ParsingError as ParsingError
-from cgt_calc.validation import TransactionError as TransactionError
+from cgt_calc.validation import ParsingError, TransactionError
 
 if TYPE_CHECKING:
     import datetime
+
+__all__ = [
+    "CalculationError",
+    "ExchangeRateMissingError",
+    "ExternalApiError",
+    "IsinTranslationError",
+    "ParsingError",
+    "TransactionError",
+]
 
 
 class CalculationError(Exception):

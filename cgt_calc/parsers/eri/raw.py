@@ -16,7 +16,7 @@ from cgt_calc.util import is_isin
 from .model import EriTransaction
 
 if TYPE_CHECKING:
-    from importlib.resources.abc import Traversable
+    from importlib.abc import Traversable
 
     from cgt_calc.isin_converter import IsinConverter
 
@@ -39,14 +39,12 @@ class EriRawData:
     currency: str
 
 
-def parse_eri_row(header: list[str], row_raw: list[str], file: Path) -> EriRawData:
+def parse_eri_row(header: list[str], row_raw: list[str], file: str) -> EriRawData:
     """Parse a single CSV row into ERI data."""
     if len(row_raw) != len(COLUMNS):
-        raise ParsingError(
-            str(file), f"expected {len(COLUMNS)} columns, got {len(row_raw)}"
-        )
+        raise ParsingError(file, f"expected {len(COLUMNS)} columns, got {len(row_raw)}")
 
-    row = dict(zip(header, row_raw, strict=True))
+    row = dict(zip(header, row_raw))
 
     isin = row["ISIN"]
     if not is_isin(isin):
@@ -68,7 +66,7 @@ def parse_eri_row(header: list[str], row_raw: list[str], file: Path) -> EriRawDa
     return EriRawData(isin=isin, date=date, price=price, currency=currency)
 
 
-def validate_header(header: list[str], file: Path, columns: list[str]) -> None:
+def validate_header(header: list[str], file: str, columns: list[str]) -> None:
     """Check if header is valid."""
     missing = set(columns) - set(header)
     if missing:
@@ -85,7 +83,9 @@ def read_eri_raw(
 ) -> list[EriTransaction]:
     """Read ERI raw transactions from file."""
     file_label = (
-        eri_file if isinstance(eri_file, Path) else Path("resources") / eri_file.name
+        str(eri_file)
+        if isinstance(eri_file, Path)
+        else str(Path("resources") / eri_file.name)
     )
 
     with eri_file.open(encoding="utf-8") as csv_file:

@@ -33,6 +33,7 @@ pandas = "^2.2"
 requests = "^2.27.1"
 types-requests = "^2.27.7"
 yfinance = "<=0.2.57"
+requests-ratelimiter = "0.7.0"
 
 [tool.poetry.group.dev.dependencies]
 codespell = "^2.3.0"

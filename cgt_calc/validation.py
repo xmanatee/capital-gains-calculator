@@ -6,10 +6,11 @@ for validating preconditions throughout the codebase.
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
+    from decimal import Decimal
+
     from cgt_calc.model import BrokerTransaction
 
 T = TypeVar("T")

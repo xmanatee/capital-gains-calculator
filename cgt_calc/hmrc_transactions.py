@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from cgt_calc.dates import get_tax_year_end, get_tax_year_start, is_date
+from cgt_calc.exceptions import CalculationError
 from cgt_calc.model import (
     ActionType,
     Broker,
@@ -16,12 +17,7 @@ from cgt_calc.model import (
 )
 from cgt_calc.transaction_log import add_to_list
 from cgt_calc.util import round_decimal
-from cgt_calc.exceptions import CalculationError
-from cgt_calc.validation import (
-    check,
-    check_tx,
-    check_tx_field,
-)
+from cgt_calc.validation import check, check_tx, check_tx_field
 
 if TYPE_CHECKING:
     import datetime
@@ -332,7 +328,11 @@ class HmrcTransactions:
             elif transaction.action is ActionType.REINVEST_DIVIDENDS:
                 print(f"WARNING: Ignoring unsupported action: {transaction.action}")
             else:
-                check_tx(transaction, False, f"action not processed: {transaction.action}")
+                check_tx(
+                    transaction,
+                    False,
+                    f"action not processed: {transaction.action}",
+                )
             balance_history.append(new_balance)
             if self.balance_check and new_balance < 0:
                 msg = (

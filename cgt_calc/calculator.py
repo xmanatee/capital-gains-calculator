@@ -182,7 +182,8 @@ class CapitalGainsCalculator:
         current_amount = self.portfolio[symbol].amount
         check(
             disposal_quantity <= current_quantity,
-            f"cannot dispose {disposal_quantity} of {symbol}, only {current_quantity} held",
+            f"cannot dispose {disposal_quantity} of {symbol}, "
+            f"only {current_quantity} held",
         )
         chargeable_gain = Decimal(0)
         calculation_entries = []
@@ -459,7 +460,9 @@ class CapitalGainsCalculator:
                                 transaction_disposal_proceeds,
                                 calculated_proceeds,
                             )
-                        if transaction_capital_gain != round_decimal(calculated_gain, 2):
+                        if transaction_capital_gain != round_decimal(
+                            calculated_gain, 2
+                        ):
                             LOGGER.error(
                                 "Gain mismatch: %s != %s",
                                 transaction_capital_gain,
