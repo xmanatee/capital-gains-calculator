@@ -1,7 +1,7 @@
 """Base classes and functions for parsers."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import csv
 from pathlib import Path
 from typing import Any
@@ -57,19 +57,24 @@ class CsvParser(ABC):
         return not missing
 
     def parse_file(self, file: Path) -> list[ParsedRowType]:
-        transactions = []
         with file.open(encoding="utf-8") as csv_file:
             reader = csv.reader(csv_file)
             headers = next(reader)
-            for row_values in reader:
-                if not any(row_values):
-                    continue
-                row = dict(zip(headers, row_values))
-                parsed_row = {}
-                for col in self.required_columns():
-                    parsed_row.update(col.parse(row))
-                transaction = self.parse_row(parsed_row, row)
-                transactions.append(transaction)
+            return self.parse_rows(headers, reader)
+
+    def parse_rows(
+        self, headers: list[str], row_values_list: Iterable[list[str]]
+    ) -> list[ParsedRowType]:
+        transactions = []
+        for row_values in row_values_list:
+            if not any(row_values):
+                continue
+            row = dict(zip(headers, row_values))
+            parsed_row = {}
+            for col in self.required_columns():
+                parsed_row.update(col.parse(row))
+            transaction = self.parse_row(parsed_row, row)
+            transactions.append(transaction)
         return transactions
 
 

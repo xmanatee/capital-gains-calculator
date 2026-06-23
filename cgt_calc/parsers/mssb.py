@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from io import StringIO
 from pathlib import Path
-import tempfile
 from typing import TYPE_CHECKING, Final
 
 from cgt_calc.const import TICKER_RENAMES
@@ -145,15 +146,11 @@ class MorganStanleyWithdrawalParser(CsvTransactionParser):
         # post-split values."
         # It makes sense, but it totally breaks the CSV parsing
         with file.open(encoding="utf-8") as csv_file:
-            lines = csv_file.readlines()
-        lines = [line for line in lines if not line.startswith("Please note")]
-        with tempfile.NamedTemporaryFile(
-            delete=False, mode="w", encoding="utf-8"
-        ) as temp_file:
-            temp_file.writelines(lines)
-            temp_file_path = temp_file.name
-
-        return super().parse_file(Path(temp_file_path))
+            csv_text = "".join(
+                line for line in csv_file if not line.startswith("Please note")
+            )
+        reader = csv.reader(StringIO(csv_text))
+        return self.parse_rows(next(reader), reader)
 
 
 def read_mssb_transactions(transactions_folder: str) -> list[BrokerTransaction]:

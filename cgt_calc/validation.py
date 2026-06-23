@@ -1,8 +1,4 @@
-"""Preconditions - minimal validation utilities.
-
-Inspired by Java Guava Preconditions. Provides a small, consistent API
-for validating preconditions throughout the codebase.
-"""
+"""Validation utilities."""
 
 from __future__ import annotations
 
@@ -14,9 +10,6 @@ if TYPE_CHECKING:
     from cgt_calc.model import BrokerTransaction
 
 T = TypeVar("T")
-
-
-# === Exceptions ===
 
 
 class ParsingError(Exception):
@@ -31,9 +24,6 @@ class TransactionError(Exception):
 
     def __init__(self, tx: BrokerTransaction, message: str):
         super().__init__(f"{message}\nTransaction: {tx}")
-
-
-# === Core Preconditions (raise ValueError) ===
 
 
 def check(condition: bool, msg: str) -> None:
@@ -54,9 +44,6 @@ def check_non_negative(value: Decimal, msg: str = "must be >= 0") -> Decimal:
     if value < 0:
         raise ValueError(f"{msg}: {value}")
     return value
-
-
-# === Context-aware Preconditions ===
 
 
 def check_tx(tx: BrokerTransaction, condition: bool, msg: str) -> None:

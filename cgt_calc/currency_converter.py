@@ -22,7 +22,6 @@ class CurrencyConverter:
         self.currencies = [currency.upper() for currency in currencies]
         self.data_dir = Path(data_dir)
         self.exchange_rates: dict[str, dict[datetime.date, Decimal]] = defaultdict(dict)
-        # Load data from files
         self._load_exchange_rates()
 
     def _load_exchange_rates(self) -> None:
@@ -31,7 +30,7 @@ class CurrencyConverter:
             currency_file = self.data_dir / f"{currency}.csv"
             with currency_file.open("r", encoding="utf-8") as f:
                 reader = csv.reader(f)
-                next(reader)  # Skip header
+                next(reader)
                 for row in reader:
                     month_str, rate_str = row
                     month_date = datetime.datetime.strptime(month_str, "%Y-%m").date()

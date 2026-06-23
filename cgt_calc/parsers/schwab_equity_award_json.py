@@ -43,10 +43,7 @@ class FieldNames:
     sale_price: str = "SalePrice"
 
     def __post_init__(self, schema_version: int) -> None:
-        """Set correct field names if the schema is not the default one.
-
-        Automatically run on object initialization.
-        """
+        """Set correct field names if the schema is not the default one."""
         if schema_version == 1:
             self.transactions = "transactions"
             self.description = "description"
@@ -266,14 +263,15 @@ def read_schwab_equity_award_json_transactions(
         except json.decoder.JSONDecodeError as exception:
             raise ParsingError(
                 transactions_file,
-                "Cloud not parse content as JSON",
+                "Could not parse content as JSON",
             ) from exception
 
+        fields = None
         for field_name, schema_version in FIELD_TO_SCHEMA.items():
             if field_name in data:
                 fields = FieldNames(schema_version)
                 break
-        if not fields:
+        if fields is None:
             raise ParsingError(
                 transactions_file,
                 f"Expected top level field ({', '.join(FIELD_TO_SCHEMA.keys())}) "

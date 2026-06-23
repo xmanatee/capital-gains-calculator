@@ -166,7 +166,7 @@ class Trading212Parser(CsvTransactionParser):
         date = row["Time"].date()
         action = row["Action"]
         symbol = row["Ticker"]
-        description = f"{row["Name"]} : {row["Notes"]}"
+        description = f"{row['Name']} : {row['Notes']}"
         quantity = row["No. of shares"]
 
         amount = row["Total"]

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
 import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class CurrentPriceFetcher:
-    """Converter which holds rate history."""
+    """Fetch market prices and convert them to GBP."""
 
     def __init__(
         self,
@@ -22,9 +21,11 @@ class CurrentPriceFetcher:
         current_prices_data: dict[str, Decimal | None] | None = None,
         historical_prices_data: dict[str, dict[datetime.date, Decimal]] | None = None,
     ):
-        """Load data from exchange_rates_file and optionally from initial_data."""
+        """Create the price fetcher."""
         self.current_prices_data = current_prices_data
-        self.historical_prices_data = historical_prices_data or {}
+        self.historical_prices_data = (
+            {} if historical_prices_data is None else historical_prices_data
+        )
         self.converter = converter
 
     def get_current_market_price(self, symbol: str) -> Decimal | None:
@@ -43,8 +44,9 @@ class CurrentPriceFetcher:
 
     def get_closing_price(self, symbol: str, date: datetime.date) -> Decimal:
         """Get the price of the share on closing time."""
-        with suppress(KeyError):
-            return self.historical_prices_data[symbol][date]
+        symbol_prices = self.historical_prices_data.get(symbol)
+        if symbol_prices is not None and date in symbol_prices:
+            return symbol_prices[date]
 
         prices = yf.Ticker(symbol).history(
             period="1d",
@@ -54,6 +56,4 @@ class CurrentPriceFetcher:
         )
         closing_price = prices.iloc[0]["Close"]
         market_price_usd = Decimal(format(closing_price, ".15g"))
-        return self.converter.to_gbp(
-            market_price_usd, "USD", datetime.datetime.now().date()
-        )
+        return self.converter.to_gbp(market_price_usd, "USD", date)

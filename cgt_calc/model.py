@@ -107,7 +107,7 @@ class ActionType(Enum):
 
 @dataclass
 class BrokerTransaction:
-    """Broken transaction data."""
+    """Broker transaction data."""
 
     date: datetime.date
     action: ActionType
